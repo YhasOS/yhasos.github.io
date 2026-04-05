@@ -1,1 +1,1 @@
-Versión v23: mejora la creación de palets. Mantiene el número mínimo de palets y, cuando el número es el mismo, prioriza repartir mejor los dos últimos palets para evitar un 80x120 medio vacío.
+Versión v24: mejora la creación de palets. Mantiene el número mínimo de palets y prueba reconvertir cualquier sufijo de palets a 80x120 si con el mismo número de palets queda mejor equilibrado y más lleno.

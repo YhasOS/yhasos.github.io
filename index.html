@@ -74,42 +74,91 @@ function packToType(sourceItems, type){
   return pallets;
 }
 
+function clonePallets(arr){
+  return arr.map(p=>({
+    type:p.type,
+    used:p.used,
+    lines:p.lines.map(l=>({...l}))
+  }));
+}
+
+function scorePlan(pallets){
+  const uses = pallets.map(p=>p.used).sort((a,b)=>a-b);
+  const minUsed = uses[0] || 0;
+  const maxUsed = uses[uses.length-1] || 0;
+  const eurCount = pallets.filter(p=>p.type==='EUR').length;
+  const variance = pallets.reduce((s,p)=>s+Math.pow(p.used-100,2),0);
+  return {minUsed, maxUsed, eurCount, variance};
+}
+
+function betterPlan(candidate, current){
+  const a = scorePlan(candidate);
+  const b = scorePlan(current);
+
+  if(a.minUsed > b.minUsed + 0.01) return true;
+  if(a.minUsed < b.minUsed - 0.01) return false;
+
+  if(a.variance < b.variance - 0.01) return true;
+  if(a.variance > b.variance + 0.01) return false;
+
+  // if still tied, prefer fewer EUR pallets
+  if(a.eurCount < b.eurCount) return true;
+  if(a.eurCount > b.eurCount) return false;
+
+  return false;
+}
+
+// Base solution prioritizing industrial pallets
 let pallets = packToType(items,'IND');
 
-if(pallets.length>=2){
-  const last=pallets[pallets.length-1];
-  const prev=pallets[pallets.length-2];
+// Evaluate suffix reconversions to EUR while keeping same number of pallets
+// This allows cases like 100+100+50 to become 100+100+100 in EUR if counts stay equal.
+let bestPlan = clonePallets(pallets);
 
-  const lastEurUsed = last.lines.reduce((s,l)=>s+(l.boxes/l.capEUR)*100,0);
-  if(lastEurUsed<=100){
+// First, also consider converting only the last pallet if it fits
+if(bestPlan.length){
+  const tmp = clonePallets(bestPlan);
+  const last = tmp[tmp.length-1];
+  const eurUsed = last.lines.reduce((s,l)=>s+(l.boxes/l.capEUR)*100,0);
+  if(eurUsed<=100){
     last.type='EUR';
-    last.used=lastEurUsed;
-  }
-
-  const prevEurUsed = prev.lines.reduce((s,l)=>s+(l.boxes/l.capEUR)*100,0);
-
-  if(lastEurUsed<=100 && prevEurUsed<=100){
-    const twoLastItems=[];
-    prev.lines.forEach(l=>twoLastItems.push({article:l.article,variant:l.variant,caja:l.caja,boxes:l.boxes,formatKey:l.formatKey,capIND:l.capIND,capEUR:l.capEUR}));
-    last.lines.forEach(l=>twoLastItems.push({article:l.article,variant:l.variant,caja:l.caja,boxes:l.boxes,formatKey:l.formatKey,capIND:l.capIND,capEUR:l.capEUR}));
-
-    const eurPacked = packToType(twoLastItems,'EUR');
-
-    if(eurPacked.length===2){
-      const currentPrevUsed = (prev.type==='EUR') ? prev.used : prevEurUsed;
-      const currentLastUsed = (last.type==='EUR') ? last.used : lastEurUsed;
-      const currentWeakness = Math.min(currentPrevUsed, currentLastUsed);
-      const newWeakness = Math.min(eurPacked[0].used, eurPacked[1].used);
-      const currentTypes = (prev.type||'IND') + '|' + (last.type||'IND');
-
-      if(newWeakness > currentWeakness + 10 || (currentTypes==='IND|EUR' && newWeakness >= 75)){
-        pallets.splice(pallets.length-2, 2, eurPacked[0], eurPacked[1]);
-      }
-    }
+    last.used=eurUsed;
+    if(betterPlan(tmp, bestPlan)) bestPlan = tmp;
   }
 }
 
-return pallets
+// Now consider reconverting the last k pallets to EUR, for any k, while keeping pallet count fixed
+for(let k=2;k<=pallets.length;k++){
+  const prefix = clonePallets(pallets.slice(0, pallets.length-k));
+  const suffix = pallets.slice(pallets.length-k);
+
+  const suffixItems=[];
+  suffix.forEach(p=>{
+    p.lines.forEach(l=>{
+      suffixItems.push({
+        article:l.article,
+        variant:l.variant,
+        caja:l.caja,
+        boxes:l.boxes,
+        formatKey:l.formatKey,
+        capIND:l.capIND,
+        capEUR:l.capEUR
+      });
+    });
+  });
+
+  const eurPacked = packToType(suffixItems,'EUR');
+  if(eurPacked.length !== k) continue;
+
+  const candidate = prefix.concat(eurPacked);
+  if(candidate.length !== pallets.length) continue;
+
+  if(betterPlan(candidate, bestPlan)){
+    bestPlan = candidate;
+  }
+}
+
+return bestPlan
 }function renderLines(pallet=null,total=0){linesEl.innerHTML='';if(!lines.length){linesEl.innerHTML='<div class="muted">Todavía no hay líneas en el pedido.</div>';return}lines.forEach(l=>{const a=getArticle(l.articleId),v=getVariant(l.articleId,l.variantId)||a.variantes[0],occ=pallet?((l.cajas/v[pallet])*100):0;const row=document.createElement('div');row.className='line';row.innerHTML=`<div><label>Artículo</label><select onchange="updateArticle('${l.uid}', this.value)">${catalog.map(x=>`<option value="${x.id}" ${x.id===l.articleId?'selected':''}>${x.nombre}</option>`).join('')}</select></div><div><label>Formato</label><select onchange="updateVariant('${l.uid}', this.value)">${a.variantes.map(x=>`<option value="${x.id}" ${x.id===l.variantId?'selected':''}>${x.formato} · ${x.caja}</option>`).join('')}</select></div><div><label>Cajas</label><input type="number" min="0" step="1" value="${l.cajas}" onchange="updateBoxes('${l.uid}', this.value)"></div><div><label>Ocupación</label><div class="valuebox">${pct(occ)}</div></div><div><button class="iconbtn" onclick="duplicateLine('${l.uid}')">⧉</button></div><div><button class="iconbtn" onclick="removeLine('${l.uid}')">✕</button></div>`;linesEl.appendChild(row)})}function renderPalletPlan(pallets){const holder=document.getElementById('palletPlan');document.getElementById('palletCount').textContent=`${pallets.length} palet${pallets.length===1?'':'s'}`;const config={IND:0,EUR:0};pallets.forEach(p=>config[p.type||'IND']=(config[p.type||'IND']||0)+1);const parts=[];if(config.IND)parts.push(`${config.IND} x 100x120`);if(config.EUR)parts.push(`${config.EUR} x 80x120`);document.getElementById('suggestedPallet').textContent=parts.length?`Configuración: ${parts.join(' + ')}`:'Palet sugerido';holder.innerHTML=pallets.map((p,idx)=>`<div class="palletBox"><h4>Palet ${idx+1} · ${(p.type||'IND')==='IND'?'100x120':'80x120'} · ${pct(p.used)}</h4>${p.lines.map(l=>`<div class="palletLine">${l.article} · ${l.variant} · ${l.boxes} cajas</div>`).join('')}</div>`).join('')}function recalc(){const eur=evaluate('EUR'),ind=evaluate('IND'),chosen=choose(eur,ind);const pallets=buildPalletPlan(chosen.rows,chosen.pallet);document.getElementById('eurBox').textContent='EUR '+pct(eur.total);document.getElementById('indBox').textContent='IND '+pct(ind.total);document.getElementById('suggestedPallet').textContent=chosen.pallet==='EUR'?'Sugerido: Europalet 80x120':'Sugerido: Palet industrial 100x120';document.getElementById('totalPct').textContent=pct(chosen.total);document.getElementById('barFill').style.width=Math.min(chosen.total,100)+'%';const fit=document.getElementById('fitState'),left=document.getElementById('leftState');fit.className='pill '+(chosen.fits?'ok':'bad');fit.textContent=chosen.fits?'CABE EN 1 PALET':'SE DIVIDE EN VARIOS PALETS';left.textContent=chosen.fits?('Hueco '+pct(chosen.remaining)):('Total '+pct(chosen.total));document.getElementById('detailBox').innerHTML=lines.length?chosen.rows.map(r=>`${r.article.nombre} · ${r.variant.caja} · ${r.cajas}/${r.variant[chosen.pallet]} = ${pct(r.ocupacion)}`).join('<br>'):'Sin líneas';renderPalletPlan(pallets);renderLines(chosen.pallet,Math.min(chosen.total,100))}function buildText(){const eur=evaluate('EUR'),ind=evaluate('IND'),chosen=choose(eur,ind);const pallets=buildPalletPlan(chosen.rows,chosen.pallet);const dest=selectedDestination?`Centro destino: ${selectedDestination.nombre}\n\n`:'';const config={IND:0,EUR:0};pallets.forEach(p=>config[p.type||'IND']=(config[p.type||'IND']||0)+1);const parts=[];if(config.IND)parts.push(`${config.IND} x 100x120`);if(config.EUR)parts.push(`${config.EUR} x 80x120`);const palletText=pallets.map((p,idx)=>`PALET ${idx+1} - ${(p.type||'IND')==='IND'?'100x120':'80x120'} - ${pct(p.used)}\n`+p.lines.map(l=>`- ${l.article} | ${l.variant} | ${l.boxes} cajas`).join('\n')).join('\n\n');return`Pedido palet mixto\n${dest}Configuración: ${parts.join(' + ')}\nTotal pedido: ${pct(chosen.total)}\nPalets necesarios: ${pallets.length}\n\n${palletText}`}function shareWhatsapp(){window.open('https://wa.me/?text='+encodeURIComponent(buildText()),'_blank')}async function copySummary(){try{await navigator.clipboard.writeText(buildText());alert('Resumen copiado.')}catch(e){alert(buildText())}}function persistLines(){localStorage.setItem(storageKey,JSON.stringify(lines))}function loadLines(){const raw=localStorage.getItem(storageKey);if(!raw)return;try{const saved=JSON.parse(raw);if(Array.isArray(saved)){lines.splice(0,lines.length,...saved.map(x=>({...x,uid:x.uid||crypto.randomUUID()})))}}catch(e){}}function getPresets(){try{return JSON.parse(localStorage.getItem(presetsKey)||'[]')}catch(e){return[]}}function savePresets(presets){localStorage.setItem(presetsKey,JSON.stringify(presets))}function saveCurrentPreset(){if(!lines.length){alert('No hay líneas para guardar.');return}const name=prompt('Nombre del pedido habitual:');if(!name)return;const presets=getPresets();presets.push({id:crypto.randomUUID(),name,lines:lines.map(l=>({articleId:l.articleId,variantId:l.variantId,cajas:l.cajas})),destination:selectedDestination});savePresets(presets);renderPresets()}function loadPreset(id){const preset=getPresets().find(x=>x.id===id);if(!preset)return;lines.splice(0,lines.length,...preset.lines.map(l=>({...l,uid:crypto.randomUUID()})));selectedDestination=preset.destination||null;persistLines();persistDestination();renderDestination();renderLines();recalc()}function deletePreset(id){const presets=getPresets().filter(x=>x.id!==id);savePresets(presets);renderPresets()}function renderPresets(){const holder=document.getElementById('savedPresets');const presets=getPresets();holder.innerHTML=presets.length?presets.map(p=>`<div class="saveItem"><strong>${p.name}</strong><button class="iconbtn small" onclick="loadPreset('${p.id}')">Cargar</button><button class="iconbtn small" onclick="deletePreset('${p.id}')">✕</button></div>`).join(''):''}function persistDestination(){localStorage.setItem(destKey,JSON.stringify(selectedDestination||null))}function loadDestination(){try{selectedDestination=JSON.parse(localStorage.getItem(destKey)||'null')}catch(e){selectedDestination=null}}
 const imageInput=document.getElementById('imageInput');
 const ocrStatus=document.getElementById('ocrStatus');
