@@ -1,1 +1,1 @@
-Versión v25: interfaz más compacta en líneas de pedido, búsqueda bilingüe español/inglés y selector global ES/EN.
+Versión v24: mejora la creación de palets. Mantiene el número mínimo de palets y prueba reconvertir cualquier sufijo de palets a 80x120 si con el mismo número de palets queda mejor equilibrado y más lleno.
