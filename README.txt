@@ -1,1 +1,1 @@
-Versión v22: mejora OCR de v21. Reconstruye mejor líneas partidas y clasifica explícitamente Tomato Cherry/Vine/Mini Plum, Sweet Potato y Avocado Hass.
+Versión v23: mejora la creación de palets. Mantiene el número mínimo de palets y, cuando el número es el mismo, prioriza repartir mejor los dos últimos palets para evitar un 80x120 medio vacío.
