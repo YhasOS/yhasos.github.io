@@ -1,0 +1,1 @@
+Versión v22: mejora OCR de v21. Reconstruye mejor líneas partidas y clasifica explícitamente Tomato Cherry/Vine/Mini Plum, Sweet Potato y Avocado Hass.

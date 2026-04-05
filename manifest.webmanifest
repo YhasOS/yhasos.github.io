@@ -1,0 +1,16 @@
+{
+  "name": "Palets Mixtos Bioalgarrobo",
+  "short_name": "Palets Bio",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#edf7ef",
+  "theme_color": "#2f7d32",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
