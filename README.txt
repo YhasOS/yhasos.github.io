@@ -1,1 +1,1 @@
-Versión v24: mejora la creación de palets. Mantiene el número mínimo de palets y prueba reconvertir cualquier sufijo de palets a 80x120 si con el mismo número de palets queda mejor equilibrado y más lleno.
+Versión v25c fix: selector ES/EN funcional sobre v25b, cambia textos visibles del buscador y líneas sin tocar lógica.
