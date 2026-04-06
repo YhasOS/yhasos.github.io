@@ -1,1 +1,1 @@
-v29 desde base buena: parte de la última versión funcional subida por el usuario y corrige las capacidades por tipo de caja en evaluate, perLineDelta y buildPalletPlan.
+v31 limpia: corrige el porcentaje de ocupación mostrado en cada línea del pedido usando las capacidades reales por tipo de caja. No toca OCR, botones ni lógica de paletización.
