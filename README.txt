@@ -1,1 +1,1 @@
-Versión v25c fix: selector ES/EN funcional sobre v25b, cambia textos visibles del buscador y líneas sin tocar lógica.
+Versión v26: catálogo y visualización bilingüe ampliados. Traduce más artículos, formatos, familias, líneas detectadas y resumen para cliente en inglés.
