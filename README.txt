@@ -1,1 +1,1 @@
-v33: líneas de pedido más compactas en móvil. Artículo y formato completos; cajas y ocupación en la misma fila; acciones más compactas. Solo cambia estilo.
+v34: líneas ultra compactas en móvil con artículo+formato en la misma fila y cajas+ocupación+acciones en otra. Familias ocultas y botones OCR movidos debajo de la lista detectada.
