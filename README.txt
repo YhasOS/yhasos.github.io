@@ -1,1 +1,1 @@
-v26b: traducción visual segura del desplegable de búsqueda y de los selectores de artículo y formato dentro de las líneas. No toca lógica, OCR ni palets.
+v27: resumen profesional para cliente, con formato más claro por palet y texto compartido mejorado, respetando idioma ES/EN sin tocar lógica.
