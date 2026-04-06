@@ -1,1 +1,1 @@
-v27: resumen profesional para cliente, con formato más claro por palet y texto compartido mejorado, respetando idioma ES/EN sin tocar lógica.
+v29 limpia: parte de v27 funcional y corrige capacidades usando una tabla por tipo de caja integrada de forma segura en evaluate, perLineDelta y buildPalletPlan.
