@@ -1,1 +1,1 @@
-v29 limpia: parte de v27 funcional y corrige capacidades usando una tabla por tipo de caja integrada de forma segura en evaluate, perLineDelta y buildPalletPlan.
+v29 desde base buena: parte de la última versión funcional subida por el usuario y corrige las capacidades por tipo de caja en evaluate, perLineDelta y buildPalletPlan.
