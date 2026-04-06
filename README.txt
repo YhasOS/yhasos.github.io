@@ -1,1 +1,1 @@
-v32 móvil pro: rediseño responsive y más visual, optimizado para clientes en móvil. Solo cambios de estilo y textos cortos; no toca lógica, OCR ni cálculos.
+v33: líneas de pedido más compactas en móvil. Artículo y formato completos; cajas y ocupación en la misma fila; acciones más compactas. Solo cambia estilo.
