@@ -1,1 +1,1 @@
-v26a: dropdown bilingüe (solo visual), seguro.
+v26b: traducción visual segura del desplegable de búsqueda y de los selectores de artículo y formato dentro de las líneas. No toca lógica, OCR ni palets.
