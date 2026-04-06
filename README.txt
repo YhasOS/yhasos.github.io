@@ -1,1 +1,1 @@
-Versión v26: catálogo y visualización bilingüe ampliados. Traduce más artículos, formatos, familias, líneas detectadas y resumen para cliente en inglés.
+v26a: dropdown bilingüe (solo visual), seguro.
