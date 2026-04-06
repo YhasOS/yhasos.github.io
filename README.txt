@@ -1,1 +1,1 @@
-v31 limpia: corrige el porcentaje de ocupación mostrado en cada línea del pedido usando las capacidades reales por tipo de caja. No toca OCR, botones ni lógica de paletización.
+v32 móvil pro: rediseño responsive y más visual, optimizado para clientes en móvil. Solo cambios de estilo y textos cortos; no toca lógica, OCR ni cálculos.
