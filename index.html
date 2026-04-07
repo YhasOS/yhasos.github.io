@@ -120,7 +120,7 @@ const UI_TEXT={
   es:{title:'Palets Mixtos Bioalgarrobo',subtitle:'Calculadora de ocupación para pedidos mixtos',destTitle:'Centro de destino',destSub:'Busca y selecciona el centro de descarga.',searchTitle:'Buscar artículos',searchSub:'Escribe y selecciona directamente el artículo para añadirlo al pedido.',searchPlaceholder:'Buscar artículo, formato o caja',uploadTitle:'Importar desde imagen',uploadSub:'Sube una captura del pedido. La app intentará detectar líneas y te dejará confirmarlas antes de añadirlas.',process:'Procesar imagen',addDetected:'Añadir detectadas',clearDetected:'Vaciar detectadas',linesTitle:'Líneas del pedido',linesSub:'Pedido con edición directa de artículos, formatos y cantidades.',addLine:'Añadir línea',save:'Guardar pedido',clear:'Vaciar',summaryTitle:'Resumen',summarySub:'La aplicación sugiere automáticamente el palet que mejor cuadra y divide el pedido en varios palets si hace falta.',share:'Compartir por WhatsApp',copy:'Copiar resumen',product:'Artículo',format:'Formato',boxes:'Cajas',occupancy:'Ocupación',noLines:'Todavía no hay líneas en el pedido.',fit:'CABE EN 1 PALET',split:'SE DIVIDE EN VARIOS PALETS',noneFound:'No se han encontrado artículos'},
   en:{title:'Bioalgarrobo Mixed Pallets',subtitle:'Occupancy calculator for mixed orders',destTitle:'Destination center',destSub:'Search and select the unloading center.',searchTitle:'Search products',searchSub:'Type and select the product directly to add it to the order.',searchPlaceholder:'Search product, format or box',uploadTitle:'Import from image',uploadSub:'Upload an order screenshot. The app will try to detect lines and let you confirm them before adding them.',process:'Process image',addDetected:'Add detected',clearDetected:'Clear detected',linesTitle:'Order lines',linesSub:'Order with direct editing of items, formats and quantities.',addLine:'Add line',save:'Save order',clear:'Clear',summaryTitle:'Summary',summarySub:'The app automatically suggests the best fitting pallet and splits the order into several pallets if needed.',share:'Share on WhatsApp',copy:'Copy summary',product:'Product',format:'Format',boxes:'Boxes',occupancy:'Occupancy',noLines:'There are no order lines yet.',fit:'FITS IN 1 PALLET',split:'SPLITS INTO MULTIPLE PALLETS',noneFound:'No products found'}
 };
-const EN_NAMES={'Aguacate':'Avocado','Tomate cherry':'Cherry tomato','Tomate cherry rama':'Cherry vine tomato','Tomate cherry pera':'Cherry plum tomato','Tomate rama':'Vine tomato','Tomate pera':'Plum tomato','Pepino holandés':'Dutch cucumber','Pepino francés':'French cucumber','Pepino snack':'Snack cucumber','Calabacín':'Courgette','Berenjena':'Aubergine','Boniato':'Sweet potato','Judía':'Green flat beans','Haba':'Broad beans'};
+const EN_NAMES={'Aguacate':'Avocado','Tomate cherry':'Cherry tomato','Tomate cherry rama':'Cherry vine tomato','Tomate cherry pera':'Cherry plum tomato','Tomate rama':'Vine tomato','Tomate pera':'Plum tomato','Pepino holandés':'Dutch cucumber','Pepino francés':'French cucumber','Pepino snack':'Snack cucumber','Calabacín':'Courgette','Berenjena':'Aubergine','Boniato':'Sweet potato','Judía':'Green flat beans','Haba':'Broad beans','Tomate ensalada':'Salad tomato'};
 const EN_FORMATS={'Granel 6 kg':'Bulk 6 kg','Granel 5 kg':'Bulk 5 kg','Granel 4 kg':'Bulk 4 kg','Granel 10 kg':'Bulk 10 kg','Granel pequeño 6 kg':'Small bulk 6 kg','12 piezas / 4,5 kg':'12 pieces / 4.5 kg','Tarrina plástico 250 g':'250 g plastic punnet'};
 function tr(k){return (UI_TEXT[UI_LANG]&&UI_TEXT[UI_LANG][k])||UI_TEXT.es[k]||k;}
 function productLabel(a){return UI_LANG==='en' ? (EN_NAMES[a.nombre]||a.nombre) : a.nombre;}
@@ -140,6 +140,10 @@ function capacityForVariant(variant,pallet){const cap=BOX_CAPACITY[variant.caja]
 
 if(!catalog.find(a=>a.id==='haba')){
   catalog.push({id:'haba',nombre:'Haba',familia:'Hortalizas',variantes:[{id:'hab1',formato:'Granel 4 kg',caja:'40x30x12',EUR:144,IND:180}]});
+}
+
+if(!catalog.find(a=>a.id==='tomate-ensalada')){
+  catalog.push({id:'tomate-ensalada',nombre:'Tomate ensalada',familia:'Tomates',variantes:[{id:'ten1',formato:'Granel 6 kg',caja:'40x30x14',EUR:120,IND:150}]});
 }
 
 const pct=n=>Number(n||0).toFixed(2)+'%';const families=['Todas',...Array.from(new Set(catalog.map(x=>x.familia))).sort()];const storageKey='bioalgarrobo-palets-lines-v3';const presetsKey='bioalgarrobo-palets-presets-v3';const destKey='bioalgarrobo-destination-v2';function getArticle(id){return catalog.find(a=>a.id===id)}function getVariant(articleId,variantId){const a=getArticle(articleId);return a?a.variantes.find(v=>v.id===variantId):null}const EN_SYNONYMS={'aguacate':'avocado','tomate cherry':'cherry tomato','tomate cherry rama':'cherry vine tomato','tomate cherry pera':'cherry plum tomato','tomate rama':'vine tomato','tomate pera':'plum tomato','pepino holandés':'dutch cucumber','pepino francés':'french cucumber','pepino snack':'snack cucumber','calabacín':'courgette','berenjena':'aubergine','boniato':'sweet potato','judía':'beans broad'};
@@ -314,6 +318,7 @@ const OCR_SYNONYMS=[
   {keys:['tomato cherry','cherry tomato','tomate cherry'], articleId:'tomate-cherry', prefer:'tch1'},
   {keys:['tomato mini plum','mini plum','tomate mini pera'], articleId:'tomate-cherry-pera', prefer:'tcp2'},
   {keys:['tomato plum','tomato pera','tomate pera'], articleId:'tomate-pera', prefer:'tp1'},
+  {keys:['tomato salad','salad tomato','tomate ensalada'], articleId:'tomate-ensalada', prefer:'ten1'},
   {keys:['tomato vine','vine tomato','tomate rama'], articleId:'tomate-rama', prefer:'tr1'},
   {keys:['avocado lamb hass','lamb hass'], articleId:'aguacate', prefer:'agu5'},
   {keys:['avocado hass small','hass small'], articleId:'aguacate', prefer:'agu3'},
@@ -454,6 +459,9 @@ function detectPreferredVariant(article, prefer, norm){
   if((norm.includes('tomato')||norm.includes('tomate')) && norm.includes('plum')){
     return {articleId:'tomate-pera', prefer:'tp1'};
   }
+  if((norm.includes('tomato')||norm.includes('tomate')) && (norm.includes('salad')||norm.includes('ensalada'))){
+    return {articleId:'tomate-ensalada', prefer:'ten1'};
+  }
   if((norm.includes('tomato')||norm.includes('tomate')) && norm.includes('vine')){
     return {articleId:'tomate-rama', prefer:'tr1'};
   }
@@ -587,11 +595,10 @@ function parseOcrDetected(text){
     if(score>=14) confidence=0.94;
     if(pos===0 || pos < 6) confidence += 0.03;
 
-    const item={id:crypto.randomUUID(), checked:true, articleId:article.id, variantId:variant.id, qty, raw, confidence:Math.min(0.99,confidence)};
-    const key=[item.articleId,item.variantId,item.qty,item.raw].join('|');
+    const key=[best.articleId,variant.id,qty].join('|');
     if(seen.has(key)) return;
     seen.add(key);
-    out.push(item);
+    out.push({id:crypto.randomUUID(), checked:true, articleId:article.id, variantId:variant.id, qty, raw, confidence:Math.min(0.99,confidence)});
   }
 
   // A) Existing layout: qty first
@@ -604,22 +611,18 @@ function parseOcrDetected(text){
   }
 
   // B) New client layout: article first with full row
-  if(!out.length){
-    const rawLines=(text||'').split(/\n+/).map(x=>cleanOcrLine(x)).filter(Boolean);
-    for(const raw of rawLines){
-      const row=parseCustomerRowLine(raw);
-      if(row){
-        pushDetected(raw, normalizeOcr(row.articleText), row.qty);
-      }
+  const rawLines=(text||'').split(/\n+/).map(x=>cleanOcrLine(x)).filter(Boolean);
+  for(const raw of rawLines){
+    const row=parseCustomerRowLine(raw);
+    if(row){
+      pushDetected(raw, normalizeOcr(row.articleText), row.qty);
     }
   }
 
   // C) New client layout: article block + qty/total columns separated
-  if(!out.length){
-    const block=parseCustomerTableBlock(text);
-    for(const row of block){
-      pushDetected(row.articleText, normalizeOcr(row.articleText), row.qty);
-    }
+  const block=parseCustomerTableBlock(text);
+  for(const row of block){
+    pushDetected(row.articleText, normalizeOcr(row.articleText), row.qty);
   }
 
   return out;

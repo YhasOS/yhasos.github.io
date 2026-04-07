@@ -1,1 +1,1 @@
-v36b: OCR ampliado para nuevo cliente con dos modos: filas artículo-primero y tabla separada por columnas. Añade Haba y corrige Broad/Green Flat Beans.
+v36c: OCR mejorado para el cliente tabla. Añade Tomate ensalada 6 kg y combina detección por filas y por bloque para no perder Tomato Salad ni Tomato Vine.
