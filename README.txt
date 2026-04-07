@@ -1,1 +1,1 @@
-v36: OCR ampliado para nuevo formato de cliente tipo tabla: Artículo + formato + cajas + formato + kilos totales. Añade Haba y corrige mapeo Broad/Green Flat Beans.
+v36b: OCR ampliado para nuevo cliente con dos modos: filas artículo-primero y tabla separada por columnas. Añade Haba y corrige Broad/Green Flat Beans.
