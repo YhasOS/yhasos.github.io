@@ -1,1 +1,1 @@
-v34: líneas ultra compactas en móvil con artículo+formato en la misma fila y cajas+ocupación+acciones en otra. Familias ocultas y botones OCR movidos debajo de la lista detectada.
+v35: líneas ajustadas según criterio del cliente. Artículo ~20 caracteres visibles, formato aprovecha el resto, cajas estrechas y botones a la derecha. Solo CSS.
