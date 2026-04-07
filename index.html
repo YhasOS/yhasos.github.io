@@ -319,7 +319,7 @@ const OCR_SYNONYMS=[
   {keys:['tomato mini plum','mini plum','tomate mini pera'], articleId:'tomate-cherry-pera', prefer:'tcp2'},
   {keys:['tomato plum','tomato pera','tomate pera'], articleId:'tomate-pera', prefer:'tp1'},
   {keys:['tomato salad','salad tomato','tomate ensalada'], articleId:'tomate-ensalada', prefer:'ten1'},
-  {keys:['tomato vine','vine tomato','tomate rama'], articleId:'tomate-rama', prefer:'tr1'},
+  {keys:['tomato vine','tomato "vine"','vine tomato','tomate rama'], articleId:'tomate-rama', prefer:'tr1'},
   {keys:['avocado lamb hass','lamb hass'], articleId:'aguacate', prefer:'agu5'},
   {keys:['avocado hass small','hass small'], articleId:'aguacate', prefer:'agu3'},
   {keys:['avocado hass','aguacate hass','avocado'], articleId:'aguacate', prefer:'agu4'}
@@ -547,15 +547,37 @@ function parseCustomerTableBlock(text){
     return null;
   }
 
-  for(const line of articleLines){
+  const assignedLines = new Set();
+
+  for(let idx=0; idx<articleLines.length; idx++){
+    const line=articleLines[idx];
     const norm=normalizeOcr(line);
     const km=norm.match(/(\d+(?:[\.,]\d+)?)\s*kg/);
     const weight=km ? parseFloat(km[1].replace(',','.')) : null;
     if(!weight) continue;
     const qty=findQtyByWeight(weight);
     if(!qty) continue;
+    assignedLines.add(idx);
     out.push({articleText:line, qty});
   }
+
+  // Fallback final: if some article lines remain without quantity,
+  // assign the next unused plausible integer in appearance order.
+  for(let idx=0; idx<articleLines.length; idx++){
+    if(assignedLines.has(idx)) continue;
+    let qty=null;
+    for(let i=0;i<nums.length;i++){
+      if(used[i]) continue;
+      const q=nums[i];
+      if(Number.isInteger(q) && q>0 && q<=300){
+        used[i]=true;
+        qty=q;
+        break;
+      }
+    }
+    if(qty) out.push({articleText:articleLines[idx], qty});
+  }
+
   return out;
 }
 

@@ -1,1 +1,1 @@
-v36c: OCR mejorado para el cliente tabla. Añade Tomate ensalada 6 kg y combina detección por filas y por bloque para no perder Tomato Salad ni Tomato Vine.
+v36d: OCR tabla mejorado con fallback para líneas no asignadas al final del bloque numérico, pensado para no perder Tomato Vine al final del pedido.
