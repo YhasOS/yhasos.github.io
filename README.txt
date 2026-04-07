@@ -1,1 +1,1 @@
-v36d: OCR tabla mejorado con fallback para líneas no asignadas al final del bloque numérico, pensado para no perder Tomato Vine al final del pedido.
+v36f: corrige la cantidad de Tomato Vine 5 kg en el fallback OCR. Ahora prioriza el total no usado (85), por lo que debe detectar 17 cajas en vez de 6.

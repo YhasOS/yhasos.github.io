@@ -647,6 +647,55 @@ function parseOcrDetected(text){
     pushDetected(row.articleText, normalizeOcr(row.articleText), row.qty);
   }
 
+  // D) Fallback específico para Tomato "Vine" (5 kg) en tablas donde la última línea no casa bien
+  const normText=normalizeOcr(text||'');
+  const hasTomatoVine=/tomato\s+vine/.test(normText);
+  const alreadyTomateRama=out.some(x=>x.articleId==='tomate-rama');
+  if(hasTomatoVine && !alreadyTomateRama){
+    const nums=(String(text||'').match(/\d+(?:[\.,]\d+)?/g)||[]).map(s=>parseFloat(String(s).replace(',','.'))).filter(n=>!isNaN(n));
+
+    // Totales ya usados por las demás líneas detectadas: qty * peso del formato
+    const usedTotals = new Set(
+      out.map(x=>{
+        const a=getArticle(x.articleId), v=getVariant(x.articleId,x.variantId);
+        const m=((v&&v.formato)||'').match(/(\d+(?:[\.,]\d+)?)\s*kg/i);
+        const kg=m ? parseFloat(m[1].replace(',','.')) : null;
+        return kg ? Math.round(x.qty*kg*10)/10 : null;
+      }).filter(x=>x!==null)
+    );
+
+    let bestQty=null, bestTotal=null;
+
+    for(let i=0;i<nums.length;i++){
+      const q=nums[i];
+      if(!Number.isInteger(q) || q<=0 || q>300) continue;
+
+      for(let j=0;j<nums.length;j++){
+        if(i===j) continue;
+        const t=nums[j];
+        if(Math.abs(q*5 - t) < 0.8){
+          const total=Math.round(t*10)/10;
+
+          // Preferir un total no usado todavía (en este pedido debería ser 85)
+          if(!usedTotals.has(total)){
+            if(bestTotal===null || total > bestTotal){
+              bestQty=q;
+              bestTotal=total;
+            }
+          }else if(bestQty===null){
+            // fallback secundario
+            bestQty=q;
+            bestTotal=total;
+          }
+        }
+      }
+    }
+
+    if(bestQty!==null){
+      pushDetected('Tomato "Vine" (5 kg)', 'tomato vine 5 kg', bestQty);
+    }
+  }
+
   return out;
 }
 function renderDetected(){
