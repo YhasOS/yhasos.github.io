@@ -1,1 +1,1 @@
-v36g: OCR tabla mejorado. Para este cliente ahora usa los totales finales por línea en orden visual y calcula cantidad = total/peso. Esto debe dar Tomato Vine 5 kg = 17 cajas.
+v36i: OCR mejorado para el primer cliente con tablas de dos columnas de cantidades (Mon/Wed). Usa la primera columna de cantidades para completar líneas que no se detecten, como Haba y Tomato Vine.
