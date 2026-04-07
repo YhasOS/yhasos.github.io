@@ -1,1 +1,1 @@
-v35: líneas ajustadas según criterio del cliente. Artículo ~20 caracteres visibles, formato aprovecha el resto, cajas estrechas y botones a la derecha. Solo CSS.
+v36: OCR ampliado para nuevo formato de cliente tipo tabla: Artículo + formato + cajas + formato + kilos totales. Añade Haba y corrige mapeo Broad/Green Flat Beans.
