@@ -1,1 +1,1 @@
-v36i: OCR mejorado para el primer cliente con tablas de dos columnas de cantidades (Mon/Wed). Usa la primera columna de cantidades para completar líneas que no se detecten, como Haba y Tomato Vine.
+v37: OCR multicliente mejorado. Añade parser específico para pedidos semanales con columnas Mon/Wed/Product usando la primera columna como cantidad. Mantiene el soporte del cliente tabla anterior.

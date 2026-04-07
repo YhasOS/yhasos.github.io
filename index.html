@@ -474,6 +474,13 @@ function detectPreferredVariant(article, prefer, norm){
     return {articleId:'boniato', prefer:'bon1'};
   }
 
+  if((norm.includes('bean')||norm.includes('beans')) && norm.includes('broad')){
+    return {articleId:'haba', prefer:'hab1'};
+  }
+  if((norm.includes('bean')||norm.includes('beans')) && norm.includes('green') && norm.includes('flat')){
+    return {articleId:'judia', prefer:'jud1'};
+  }
+
   // Avocado
   if(norm.includes('avocado') && norm.includes('lamb') && norm.includes('hass')){
     return {articleId:'aguacate', prefer:'agu5'};
@@ -577,72 +584,59 @@ function parseCustomerTableBlock(text){
     if(qty) out.push({articleText:line, qty});
   }
 
-  // E) Fallback para tablas del primer cliente con dos columnas de cantidades (Mon/Wed)
-  const firstQtyTable=parseFirstQtyColumnTable(text);
-  for(const row of firstQtyTable){
-    const norm=normalizeOcr(row.articleText);
-    let best=classifyOcrArticle(norm);
-    if(!best){
-      for(const syn of OCR_SYNONYMS){
-        for(const k of syn.keys){
-          if(norm.includes(k)){ best=syn; break; }
-        }
-        if(best) break;
-      }
-    }
-    if(!best) continue;
-    const article=getArticle(best.articleId);
-    if(!article) continue;
-    const exists=out.some(x=>x.articleId===article.id);
-    if(exists) continue;
-    const variant=detectPreferredVariant(article,best.prefer,norm);
-    out.push({id:crypto.randomUUID(), checked:true, articleId:article.id, variantId:variant.id, qty:row.qty, raw:row.articleText, confidence:0.86});
+  // E) Formato cliente semanal: columnas Mon/Wed + Product
+  const weekly=parseWeeklyColumnTable(text);
+  for(const row of weekly){
+    pushDetected(row.articleText, normalizeOcr(row.articleText), row.qty);
   }
 
   return out;
 }
 
 
-function parseFirstQtyColumnTable(text){
+function parseWeeklyColumnTable(text){
   const rawLines=(text||'').split(/\n+/).map(x=>cleanOcrLine(x)).filter(Boolean);
+  const allNorm=rawLines.map(x=>normalizeOcr(x)).join(' ');
+  if(!(/mon/.test(allNorm) && /wed/.test(allNorm) && /product/.test(allNorm))) return [];
 
-  function articleLike(line){
-    const n=normalizeOcr(line);
-    if(!/\bkg\b|units?/.test(n)) return false;
-    if(!/[a-z]/.test(n)) return false;
-    if(/please note|dates below|warehouse|mon\b|wed\b|product|price|country|certifier|supplier|grand total|buy price|per kg/i.test(n)) return false;
-    if(classifyOcrArticle(n)) return true;
-    for(const syn of OCR_SYNONYMS){
-      for(const k of syn.keys){
-        if(n.includes(k)) return true;
-      }
-    }
-    return false;
+  const rows=[];
+  let current='';
+
+  function startsWeeklyRow(s){
+    return /^\d{1,3}\s+\d{1,3}\b/.test(normalizeOcr(s));
   }
 
-  const articleLines=rawLines.filter(articleLike);
-  if(articleLines.length<4) return [];
-
-  // Numeric-only lines are usually the qty columns in this client format.
-  const numericLines=rawLines.filter(line=>{
-    const n=normalizeOcr(line);
-    return /^[\d\s\.,]+$/.test(n) && /\d/.test(n);
-  });
-
-  const ints=[];
-  for(const line of numericLines){
-    const found=line.match(/\d+/g) || [];
-    for(const s of found){
-      const v=parseInt(s,10);
-      if(v>0 && v<=300) ints.push(v);
-    }
+  function looksLikeContinuation(s){
+    const n=normalizeOcr(s);
+    return /[a-z]/.test(n) || /^\d+(?:[\.,]\d+)?\s*(kg|units?)\b/.test(n) || /broad|vine|small|plum|cherry|potato|hass|cucumber|tomato|beans|aubergine|courgette|avocado|sweet/.test(n);
   }
 
-  // Need at least one full qty column
-  if(ints.length < articleLines.length) return [];
+  for(const line of rawLines){
+    const n=normalizeOcr(line);
+    if(/hide quoted text|grand total/.test(n)) break;
 
-  const qtys=ints.slice(0, articleLines.length);
-  return articleLines.map((articleText, idx)=>({articleText, qty: qtys[idx]}));
+    if(startsWeeklyRow(line)){
+      if(current) rows.push(current.trim());
+      current=line.trim();
+      continue;
+    }
+
+    if(current && looksLikeContinuation(line)){
+      current=(current+' '+line).replace(/\s+/g,' ').trim();
+    }
+  }
+  if(current) rows.push(current.trim());
+
+  const out=[];
+  for(const row of rows){
+    const norm=normalizeOcr(row);
+    const m=norm.match(/^(\d{1,3})\s+(\d{1,3})\s+(.+?)\s+((?:\d+(?:[\.,]\d+)?\s*kg)|(?:\d+\s*units?))/i);
+    if(!m) continue;
+    const qty=parseInt(m[1],10); // primera columna (Mon)
+    const articleText=(m[3]+' '+m[4]).trim();
+    if(qty>0) out.push({articleText, qty});
+  }
+  return out;
 }
 
 function parseOcrDetected(text){
