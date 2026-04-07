@@ -1,1 +1,1 @@
-v37: OCR multicliente mejorado. Añade parser específico para pedidos semanales con columnas Mon/Wed/Product usando la primera columna como cantidad. Mantiene el soporte del cliente tabla anterior.
+v41: enfoque fiable para OCR. Añade texto OCR asistido editable y botón para reprocesarlo sin volver a subir la imagen. Ideal para capturas semanales que rompen filas como Beans Broad o Tomato Vine.
