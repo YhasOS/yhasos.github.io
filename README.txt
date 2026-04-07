@@ -1,1 +1,1 @@
-v36f: corrige la cantidad de Tomato Vine 5 kg en el fallback OCR. Ahora prioriza el total no usado (85), por lo que debe detectar 17 cajas en vez de 6.
+v36g: OCR tabla mejorado. Para este cliente ahora usa los totales finales por línea en orden visual y calcula cantidad = total/peso. Esto debe dar Tomato Vine 5 kg = 17 cajas.

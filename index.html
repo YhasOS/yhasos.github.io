@@ -500,6 +500,7 @@ function parseCustomerTableBlock(text){
   const rawLines=(text||'').split(/\n+/).map(x=>cleanOcrLine(x)).filter(Boolean);
   const articleLines=[];
   let seenGrandTotal=false;
+
   for(const line of rawLines){
     const n=normalizeOcr(line);
     if(/grand total/.test(n)){ seenGrandTotal=true; continue; }
@@ -509,19 +510,39 @@ function parseCustomerTableBlock(text){
   }
   if(articleLines.length<3) return [];
 
-  // Remaining numeric pool after grand total
-  const afterGrand = rawLines.filter(x=>{
-    const n=normalizeOcr(x);
-    return seenGrandTotal ? true : /grand total/.test(n);
-  });
   const tailText = rawLines.join('\n').split(/grand total/i).slice(1).join(' ');
   const nums = (tailText.match(/\d+(?:[\.,]\d+)?/g)||[]).map(s=>parseFloat(String(s).replace(',','.'))).filter(n=>!isNaN(n));
-
   const out=[];
+
+  // Estrategia principal para este cliente:
+  // en OCR suelen aparecer bien los totales finales de cada línea y al final el Grand Total.
+  // Si tenemos N líneas de artículos, cogemos los últimos N valores antes del total global
+  // como totales por línea, manteniendo el orden visual del pedido.
+  if(nums.length >= articleLines.length + 1){
+    const grandCandidate = nums[nums.length-1];
+    const lineTotals = nums.slice(nums.length - 1 - articleLines.length, nums.length - 1);
+
+    let okCount = 0;
+    for(let idx=0; idx<articleLines.length; idx++){
+      const line=articleLines[idx];
+      const norm=normalizeOcr(line);
+      const km=norm.match(/(\d+(?:[\.,]\d+)?)\s*kg/);
+      const weight=km ? parseFloat(km[1].replace(',','.')) : null;
+      const total=lineTotals[idx];
+      if(!weight || !total) continue;
+      const qty = Math.round(total / weight);
+      if(qty>0 && Math.abs(qty*weight - total) < 0.8){
+        out.push({articleText:line, qty});
+        okCount++;
+      }
+    }
+    if(okCount >= Math.max(3, articleLines.length-1)) return out;
+  }
+
+  // Fallback antiguo: casar cantidades y totales por multiplicación
   const used = new Array(nums.length).fill(false);
 
   function findQtyByWeight(weight){
-    // first try exact qty*weight ~= total using unused numbers
     for(let i=0;i<nums.length;i++){
       if(used[i]) continue;
       const q=nums[i];
@@ -535,7 +556,6 @@ function parseCustomerTableBlock(text){
         }
       }
     }
-    // fallback: next plausible integer qty
     for(let i=0;i<nums.length;i++){
       if(used[i]) continue;
       const q=nums[i];
@@ -547,8 +567,6 @@ function parseCustomerTableBlock(text){
     return null;
   }
 
-  const assignedLines = new Set();
-
   for(let idx=0; idx<articleLines.length; idx++){
     const line=articleLines[idx];
     const norm=normalizeOcr(line);
@@ -556,26 +574,7 @@ function parseCustomerTableBlock(text){
     const weight=km ? parseFloat(km[1].replace(',','.')) : null;
     if(!weight) continue;
     const qty=findQtyByWeight(weight);
-    if(!qty) continue;
-    assignedLines.add(idx);
-    out.push({articleText:line, qty});
-  }
-
-  // Fallback final: if some article lines remain without quantity,
-  // assign the next unused plausible integer in appearance order.
-  for(let idx=0; idx<articleLines.length; idx++){
-    if(assignedLines.has(idx)) continue;
-    let qty=null;
-    for(let i=0;i<nums.length;i++){
-      if(used[i]) continue;
-      const q=nums[i];
-      if(Number.isInteger(q) && q>0 && q<=300){
-        used[i]=true;
-        qty=q;
-        break;
-      }
-    }
-    if(qty) out.push({articleText:articleLines[idx], qty});
+    if(qty) out.push({articleText:line, qty});
   }
 
   return out;
