@@ -1,1 +1,1 @@
-v42: OCR híbrido más robusto. Mantiene OCR asistido y añade una librería de patrones globales para varios formatos de cliente (lista libre, tabla semanal, productor y hoja con códigos).
+v43 final: OCR híbrido con parser específico para tablas tipo ERP/códigos (Box/4KG + cantidad + total). Mantiene OCR asistido y sanea falsos positivos gigantes como 757 cajas.
