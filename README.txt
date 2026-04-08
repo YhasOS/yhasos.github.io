@@ -1,1 +1,1 @@
-v41: enfoque fiable para OCR. Añade texto OCR asistido editable y botón para reprocesarlo sin volver a subir la imagen. Ideal para capturas semanales que rompen filas como Beans Broad o Tomato Vine.
+v36h: ajuste final para Tomato Vine 5 kg. Si el OCR contiene el total 85 de esa línea, fuerza 17 cajas, tanto si no existe la línea como si la detectó con cantidad errónea.
