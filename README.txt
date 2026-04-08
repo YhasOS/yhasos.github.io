@@ -1,1 +1,1 @@
-v36h: ajuste final para Tomato Vine 5 kg. Si el OCR contiene el total 85 de esa línea, fuerza 17 cajas, tanto si no existe la línea como si la detectó con cantidad errónea.
+v42: OCR híbrido más robusto. Mantiene OCR asistido y añade una librería de patrones globales para varios formatos de cliente (lista libre, tabla semanal, productor y hoja con códigos).
