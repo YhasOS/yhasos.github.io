@@ -1,1 +1,1 @@
-v43 final: OCR híbrido con parser específico para tablas tipo ERP/códigos (Box/4KG + cantidad + total). Mantiene OCR asistido y sanea falsos positivos gigantes como 757 cajas.
+v44: parte de la base estable v41. Añade parser específico para tablas ERP con códigos y Box/..KG. No toca el resto del OCR y evita cantidades absurdas.

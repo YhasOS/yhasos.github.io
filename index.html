@@ -481,6 +481,9 @@ function detectPreferredVariant(article, prefer, norm){
   if((norm.includes('green') && norm.includes('flat') && norm.includes('bean')) || (norm.includes('green') && norm.includes('flat') && norm.includes('beans'))){
     return {articleId:'judia', prefer:'jud1'};
   }
+  if((norm.includes('tomato')||norm.includes('tomate')) && norm.includes('vine') && !norm.includes('cherry')){
+    return {articleId:'tomate-rama', prefer:'tr1'};
+  }
 
   // Avocado
   if(norm.includes('avocado') && norm.includes('lamb') && norm.includes('hass')){
@@ -585,101 +588,13 @@ function parseCustomerTableBlock(text){
     if(qty) out.push({articleText:line, qty});
   }
 
-
-  // E) Librería de patrones robustos para capturas difíciles de distintos clientes.
-  const flat = normalizeOcr(String(text||'').replace(/\n+/g,' ')).replace(/\s+/g,' ').trim();
-
-  function resolveSpec(norm){
-    let best=classifyOcrArticle(norm);
-    if(!best){
-      for(const syn of OCR_SYNONYMS){
-        for(const k of syn.keys){
-          if(norm.includes(k)){ best=syn; break; }
-        }
-        if(best) break;
-      }
-    }
-    if(!best) return null;
-    const article=getArticle(best.articleId);
-    if(!article) return null;
-    const variant=detectPreferredVariant(article,best.prefer,norm);
-    return {article, variant, norm};
-  }
-
-  function addByPattern(label, forcedNorm, patterns){
-    const spec=resolveSpec(forcedNorm);
-    if(!spec) return;
-    const exists=out.some(x=>x.articleId===spec.article.id && x.variantId===spec.variant.id);
-    if(exists) return;
-
-    for(const rx of patterns){
-      const m = flat.match(rx);
-      if(!m) continue;
-      const qty = parseInt(m[1],10);
-      if(qty>0 && qty<=300){
-        pushDetected(label, forcedNorm, qty);
-        return;
-      }
-    }
-  }
-
-  addByPattern('Beans Broad 4kg','beans broad 4 kg',[
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+(?:bean|beans)\s+broad\s+4\s*kg(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+(?:bean|beans)\s+broad\s+4\s*kg(?:\s|$)/,
-    /(?:broad\s+bean|bean\s+broad|beans\s+broad)\s+4\s*kg(?:\s+\w+){0,8}?\s+(\d{1,3})\s+\d{1,4}(?:\s|$)/
-  ]);
-
-  addByPattern('Tomato Vine 5kg','tomato vine 5 kg',[
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+tomato\s+vine\s+5\s*kg(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+tomato\s+vine\s+5\s*kg(?:\s|$)/,
-    /tomato\s+vine\s+5\s*kg(?:\s+\w+){0,8}?\s+(\d{1,3})\s+\d{1,4}(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+vine\s+5\s*kg(?:\s|$)/
-  ]);
-
-  addByPattern('Tomato Cherry Vine 4kg','tomato cherry vine 4 kg',[
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+tomato\s+cherry\s+vine\s+4\s*kg(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+tomato\s+cherry\s+vine\s+4\s*kg(?:\s|$)/,
-    /tomato\s+cherry\s+vine\s+4\s*kg(?:\s+\w+){0,8}?\s+(\d{1,3})\s+\d{1,4}(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+cherry\s+4\s*kg\s+vine(?:\s|$)/
-  ]);
-
-  addByPattern('Courgette 6kg','courgette 6 kg',[
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+courgette\s+6\s*kg(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+courgette\s+6\s*kg(?:\s|$)/,
-    /courgette(?:\s+\w+)?\s+6\s*kg(?:\s+\w+){0,8}?\s+(\d{1,3})\s+\d{1,4}(?:\s|$)/
-  ]);
-
-  addByPattern('Cucumber Dutch 12 units','cucumber dutch 12 units 4.5 kg',[
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+cucumber(?:\s+dutch)?\s+12\s*units?(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+cucumber(?:\s+dutch)?\s+12\s*units?(?:\s|$)/,
-    /cucumber(?:\s+dutch)?(?:\s+\w+){0,6}?\s+(\d{1,3})\s+\d{1,4}(?:\s|$)/
-  ]);
-
-  addByPattern('Tomato Salad 6kg','tomato salad 6 kg',[
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+tomato\s+salad\s+6\s*kg(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+tomato\s+salad\s+6\s*kg(?:\s|$)/,
-    /tomato\s+salad\s+6\s*kg(?:\s+\w+){0,8}?\s+(\d{1,3})\s+\d{1,4}(?:\s|$)/
-  ]);
-
-  addByPattern('Broad Bean 4kg','broad bean 4 kg',[
-    /(?:^|\s)(\d{1,3})\s+\d{1,3}\s+broad\s+bean\s+4\s*kg(?:\s|$)/,
-    /(?:^|\s)(\d{1,3})\s+broad\s+bean\s+4\s*kg(?:\s|$)/,
-    /broad\s+bean\s+4\s*kg(?:\s+\w+){0,8}?\s+(\d{1,3})\s+\d{1,4}(?:\s|$)/
-  ]);
-
-  // F) Tabla tipo ERP / códigos (AUBBLA.5K, Box/4KG, qty, total)
+  // E) Tabla tipo ERP / códigos (AUBBLA.5K, Box/4KG, cantidad, total)
   const erpRows=parseErpCodeTable(text);
-  if(erpRows.length){
-    // eliminar falsos positivos enormes típicos de totales globales
-    for(let i=out.length-1;i>=0;i--){
-      if(out[i].qty>300) out.splice(i,1);
-    }
-    for(const row of erpRows){
-      pushDetected(row.articleText, normalizeOcr(row.articleText), row.qty);
-    }
+  for(const row of erpRows){
+    pushDetected(row.articleText, normalizeOcr(row.articleText), row.qty);
   }
 
-  // G) saneado final: nunca aceptar cantidades absurdas de OCR libre
+  // saneado final
   for(let i=out.length-1;i>=0;i--){
     if(!(out[i].qty>0) || out[i].qty>300) out.splice(i,1);
   }
@@ -689,25 +604,36 @@ function parseCustomerTableBlock(text){
 
 
 function parseErpCodeTable(text){
-  const flat = String(text||'')
-    .replace(/\r/g,'\n')
-    .replace(/[“”]/g,'"')
-    .replace(/\s+/g,' ')
-    .trim();
-
+  const rawLines=(text||'').split(/\n+/).map(x=>cleanOcrLine(x)).filter(Boolean);
   const out=[];
 
-  // Generic ERP-style row:
-  // CODE Description (kg) Box/4KG 7 28
-  // CODE Cucumber Dutch (4.5 kg- 12 ud) Box/4.5KG 34 153
-  const rx = /(?:^|\s)([A-Z0-9.]{4,}\s+)?([A-Za-z" ]+?\(\s*\d+(?:[\.,]\d+)?\s*kg(?:\s*-\s*12\s*ud)?\s*\))\s+box\/[0-9.]+kg\s+(\d{1,3})\s+(\d{1,4}(?:[\.,]\d+)?)(?=\s+[A-Z0-9.]{4,}\s+|\s*$)/gi;
+  // Ejemplos:
+  // AUBBLA.5K Aubergine "Black" (5 kg) Box/5KG 36 180
+  // BROA.4K Broad Bean (4 kg) Box/4KG 7 28
+  // TOMVIN.5K Tomato "Vine" (5 kg) Box/5KG 6 30
+  const rowRegex=/^(?:[A-Z0-9.]{4,}\s+)?(.+?\(\s*\d+(?:[\.,]\d+)?\s*kg(?:\s*-\s*12\s*ud)?\s*\))\s+Box\/[0-9.]+KG\s+(\d{1,3})\s+(\d{1,4}(?:[\.,]\d+)?)$/i;
 
-  let m;
-  while((m = rx.exec(flat)) !== null){
-    const articleText = (m[2]||'').trim();
-    const qty = parseInt(m[3],10);
+  for(const line of rawLines){
+    const m=line.match(rowRegex);
+    if(!m) continue;
+    const articleText=(m[1]||'').trim();
+    const qty=parseInt(m[2],10);
     if(qty>0 && qty<=300){
       out.push({articleText, qty});
+    }
+  }
+
+  // Fallback más tolerante por si el OCR mete todo en una sola línea:
+  if(!out.length){
+    const flat=String(text||'').replace(/\r/g,'\n').replace(/[“”]/g,'"').replace(/\s+/g,' ').trim();
+    const rx=/(?:^|\s)(?:[A-Z0-9.]{4,}\s+)?(.+?\(\s*\d+(?:[\.,]\d+)?\s*kg(?:\s*-\s*12\s*ud)?\s*\))\s+Box\/[0-9.]+KG\s+(\d{1,3})\s+(\d{1,4}(?:[\.,]\d+)?)(?=\s+(?:[A-Z0-9.]{4,}\s+.+?\(\s*\d)|\s*$)/gi;
+    let m;
+    while((m=rx.exec(flat))!==null){
+      const articleText=(m[1]||'').trim();
+      const qty=parseInt(m[2],10);
+      if(qty>0 && qty<=300){
+        out.push({articleText, qty});
+      }
     }
   }
 
@@ -848,12 +774,12 @@ async function processImage(){
   try{
     const result=await Tesseract.recognize(file,'eng+spa');
     const text=(result.data.text||'').replace(/\r/g,'\n');
-    if(typeof setOcrTextAreaValue==='function') setOcrTextAreaValue(text);
     detectedItems=parseOcrDetected(text);
     ocrStatus.textContent = detectedItems.length ? `Imagen procesada: ${detectedItems.length} líneas detectadas` : 'No se ha podido identificar ninguna línea.';
     renderDetected();
   }catch(e){
     ocrStatus.textContent='Error al procesar la imagen';
+    console.error(e);
   }
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='inline-block'});installBtn.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display='none'});window.setLang=setLang; window.processImage=processImage; window.addDetectedLines=addDetectedLines; window.clearDetected=clearDetected; window.toggleDetected=toggleDetected; searchEl.addEventListener('input',renderDropdown);searchEl.addEventListener('focus',renderDropdown);destSearchEl.addEventListener('input',renderDestDropdown);destSearchEl.addEventListener('focus',renderDestDropdown);document.addEventListener('click',e=>{if(!e.target.closest('.searchWrap')){closeDropdown();closeDestDropdown()}});loadLines();loadDestination();renderDestination();renderFamilyChips();renderDropdown();renderDestDropdown();renderLines();renderPresets();recalc();applyLang();
