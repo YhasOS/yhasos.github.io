@@ -1,1 +1,1 @@
-v44: parte de la base estable v41. Añade parser específico para tablas ERP con códigos y Box/..KG. No toca el resto del OCR y evita cantidades absurdas.
+v3.3 cliente 2: parser semanal por plantilla fija de 13 filas. Reconstruye filas OCR y asigna cantidades por orden visual del cliente 2 para evitar cruces entre productos.
