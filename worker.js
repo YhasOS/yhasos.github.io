@@ -1,43 +1,25 @@
 export default {
   async fetch(request) {
-    const reqUrl = new URL(request.url);
-    const target = reqUrl.searchParams.get('url');
-
+    const url = new URL(request.url);
+    const target = url.searchParams.get('url');
     const cors = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-      'Access-Control-Allow-Headers': '*',
-      'Access-Control-Expose-Headers': '*'
+      'Access-Control-Allow-Headers': '*'
     };
-
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
-
-    if (!target) {
-      return new Response('BioIPTV proxy activo', { headers: { ...cors, 'content-type': 'text/plain; charset=utf-8' } });
+    if (!target) return new Response('BioIPTV Worker activo', { headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8' } });
+    try {
+      const range = request.headers.get('Range');
+      const headers = { 'User-Agent': 'Mozilla/5.0', 'Accept': '*/*' };
+      if (range) headers.Range = range;
+      const upstream = await fetch(target, { headers, redirect: 'follow' });
+      const outHeaders = new Headers(upstream.headers);
+      Object.entries(cors).forEach(([k,v]) => outHeaders.set(k,v));
+      outHeaders.set('Cache-Control', 'no-store');
+      return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: outHeaders });
+    } catch (e) {
+      return new Response('Error proxy: ' + e.message, { status: 502, headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8' } });
     }
-
-    const headers = new Headers(request.headers);
-    headers.set('User-Agent', 'Mozilla/5.0');
-    headers.delete('host');
-    headers.delete('origin');
-    headers.delete('referer');
-
-    const upstream = await fetch(target, {
-      method: request.method,
-      headers,
-      redirect: 'follow'
-    });
-
-    const outHeaders = new Headers(upstream.headers);
-    for (const [k, v] of Object.entries(cors)) outHeaders.set(k, v);
-    outHeaders.delete('content-security-policy');
-    outHeaders.delete('x-frame-options');
-
-    const lower = target.toLowerCase();
-    if (lower.includes('.m3u8')) outHeaders.set('content-type', 'application/vnd.apple.mpegurl');
-    else if (lower.includes('.ts') || lower.includes('mpegts')) outHeaders.set('content-type', 'video/mp2t');
-    else if (lower.includes('get.php') || lower.includes('type=m3u')) outHeaders.set('content-type', 'text/plain; charset=utf-8');
-
-    return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: outHeaders });
   }
 };

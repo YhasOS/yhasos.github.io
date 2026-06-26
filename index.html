@@ -3,71 +3,94 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#07101f" />
+  <meta name="theme-color" content="#07111f" />
   <title>BioIPTV</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <style>
-    :root{--bg:#070b13;--card:#111827;--card2:#0b1220;--text:#f8fafc;--muted:#94a3b8;--line:#243044;--accent:#2563eb;--danger:#b91c1c;--ok:#16a34a}
-    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#090f1b,#05070c);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center;position:sticky;top:0;background:rgba(7,11,19,.94);backdrop-filter:blur(10px);z-index:5}
-    h1{font-size:22px;margin:0}.sub{color:var(--muted);font-size:13px}.wrap{max-width:1280px;margin:0 auto;padding:16px}.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}.row{display:flex;gap:10px;align-items:center}.row>*{min-width:0}input,select{width:100%;background:#050a13;border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px;font-size:15px}button{border:0;border-radius:12px;background:var(--accent);color:white;padding:12px 16px;font-weight:800;cursor:pointer}button.secondary{background:#253147}button.danger{background:var(--danger)}button.ghost{background:#111827;border:1px solid var(--line)}button:disabled{opacity:.55}.grid{display:grid;grid-template-columns:360px 1fr;gap:14px}.sidebar{min-height:0}.videoCard{min-width:0}video{width:100%;background:#111;border-radius:16px;aspect-ratio:16/9}.chips{display:flex;gap:8px;overflow:auto;padding-bottom:4px;margin-bottom:10px}.chip{white-space:nowrap;background:#0b1220;border:1px solid var(--line);padding:9px 12px;border-radius:999px;color:var(--text);cursor:pointer;font-weight:700}.chip.active{background:#1d4ed8;border-color:#60a5fa}.list{height:58vh;overflow:auto;padding-right:4px}.item{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#0b1220;margin-bottom:8px;cursor:pointer}.item.active{outline:2px solid #2563eb;background:#0f234f}.logo{width:42px;height:42px;border-radius:10px;background:#050a13;object-fit:contain}.name{font-weight:900;line-height:1.15}.group{font-size:12px;color:#93c5fd;margin-top:4px}.star{font-size:22px;background:transparent;border:0;padding:4px;color:#64748b}.star.on{color:#fbbf24}.meta{display:flex;justify-content:space-between;gap:10px;margin:10px 0;color:var(--muted);font-size:14px}.playerBtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}.status{color:var(--muted);font-size:13px;margin-top:8px}.hidden{display:none!important}.small{font-size:12px;color:var(--muted);margin-top:7px}.toggle{display:flex;gap:8px;align-items:center}.toggle input{width:auto}.topTools{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px}
-    @media(max-width:860px){.grid{grid-template-columns:1fr}.list{height:42vh}.row{flex-direction:column;align-items:stretch}.topTools{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}.wrap{padding:10px}.panel{border-radius:12px;padding:10px}button{width:100%}.playerBtns button{width:auto;flex:1}.sidebar{order:2}.videoCard{order:1}}
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.min.js"></script>
 </head>
 <body>
-<header><div><h1>BioIPTV</h1><div class="sub">Uso personal · M3U · HLS/MPEGTS · sin anuncios</div></div><div class="sub" id="installHint">Añadir a pantalla de inicio desde el navegador</div></header>
-<div class="wrap">
-  <section class="panel">
-    <label><b>URL M3U</b></label>
-    <div class="row"><input id="m3uUrl" placeholder="Pega aquí tu URL M3U" autocomplete="off"><button id="loadBtn">Cargar</button></div>
-    <div class="small">Se guarda solo en este dispositivo. Usa solo listas para las que tengas autorización.</div>
-  </section>
-  <section class="panel">
-    <label><b>Proxy anti-bloqueo CORS / HTTP</b></label>
-    <div class="row"><input id="proxyUrl" placeholder="https://tu-worker.workers.dev/" autocomplete="off"><button id="saveProxy" class="secondary">Guardar proxy</button></div>
-    <div class="small">Necesario para listas HTTP, MPEGTS o proveedores que bloquean el navegador.</div>
-  </section>
-  <main class="grid">
-    <aside class="panel sidebar">
-      <div class="meta"><b>Canales</b><span id="count">0</span></div>
-      <div class="topTools"><input id="search" placeholder="Buscar canal..."><select id="kind"><option value="all">Todo</option><option value="live">Canales</option><option value="vod">VOD / Películas / Series</option><option value="adult">Adultos</option><option value="fav">Favoritos</option></select></div>
-      <div class="chips" id="groups"></div>
-      <label class="toggle small"><input type="checkbox" id="showAdult"> Mostrar adultos</label>
-      <div class="list" id="list"></div>
-    </aside>
-    <section class="panel videoCard">
-      <video id="video" controls playsinline></video>
-      <div class="meta"><span id="now">Sin canal seleccionado</span><span id="engine"></span></div>
-      <div class="playerBtns"><button class="secondary" id="prevBtn">Anterior</button><button class="secondary" id="nextBtn">Siguiente</button><button class="ghost" id="reloadBtn">Reintentar</button><button class="danger" id="clearBtn">Borrar datos</button><button id="fsBtn">Pantalla completa</button></div>
-      <div class="status" id="status"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">TV</div>
+        <div>
+          <h1>BioIPTV</h1>
+          <p>Reproductor privado M3U · sin anuncios</p>
+        </div>
+      </div>
+      <button id="installBtn" class="ghost hidden">Instalar app</button>
+      <button id="settingsBtn" class="ghost">Ajustes</button>
+    </header>
+
+    <section id="setupPanel" class="setup card">
+      <div class="setup-grid">
+        <label>
+          <span>URL M3U</span>
+          <input id="m3uUrl" type="password" placeholder="Pega aquí tu URL M3U" autocomplete="off" />
+        </label>
+        <label>
+          <span>Proxy Cloudflare Worker</span>
+          <input id="proxyUrl" type="text" placeholder="https://tu-worker.workers.dev/" />
+        </label>
+        <div class="setup-actions">
+          <button id="loadBtn" class="primary">Cargar lista</button>
+          <button id="clearBtn" class="danger">Borrar datos</button>
+        </div>
+      </div>
+      <p class="hint">Solo se guardan la URL, favoritos y ajustes. La lista se descarga al abrir para evitar límites del navegador.</p>
     </section>
-  </main>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest"></script>
-<script>
-const $=s=>document.querySelector(s); const LS='bioiptv_v2_';
-let channels=[], filtered=[], current=-1, hls=null, mpeg=null, activeGroup='Todos';
-const adultWords=['adult','xxx','porn','porno','erotic','erótico','+18','18+','adults','para adultos'];
-const vodWords=['vod','movie','pelicula','película','cine','serie','series','film','pelis','documental'];
-function save(k,v){localStorage.setItem(LS+k,v)} function get(k,d=''){return localStorage.getItem(LS+k)||d}
-function normalizeProxy(){let p=$('#proxyUrl').value.trim(); if(p&&!p.endsWith('/'))p+='/'; $('#proxyUrl').value=p; save('proxy',p); return p}
-function proxied(url){const p=get('proxy','').trim(); return p ? p+'?url='+encodeURIComponent(url) : url}
-function parseAttrs(line){const o={}; (line.match(/[\w-]+="[^"]*"/g)||[]).forEach(x=>{const i=x.indexOf('=');o[x.slice(0,i)]=x.slice(i+2,-1)}); return o}
-function isAdult(c){return adultWords.some(w=>(c.name+' '+c.group).toLowerCase().includes(w))}
-function isVod(c){return vodWords.some(w=>(c.name+' '+c.group).toLowerCase().includes(w))}
-function parseM3U(txt){const lines=txt.replace(/\r/g,'').split('\n'); const out=[]; let info=null; for(const raw of lines){const line=raw.trim(); if(!line)continue; if(line.startsWith('#EXTINF')){const attrs=parseAttrs(line); const comma=line.lastIndexOf(','); info={name:(comma>=0?line.slice(comma+1):attrs['tvg-name']||'Canal').trim(), logo:attrs['tvg-logo']||'', group:attrs['group-title']||'Sin grupo'};} else if(info && !line.startsWith('#')){out.push({...info,url:line,id:out.length}); info=null;}} return out}
-function groupLabel(g){g=(g||'Sin grupo').trim(); if(!g)return 'Sin grupo'; return g}
-function loadGroups(){let gs=['Todos','Favoritos']; const set=new Set(); channels.forEach(c=>{if(!isAdult(c)||$('#showAdult').checked)set.add(groupLabel(c.group))}); gs=gs.concat([...set].sort((a,b)=>a.localeCompare(b))); $('#groups').innerHTML=gs.map(g=>`<button class="chip ${g===activeGroup?'active':''}" data-g="${g.replaceAll('"','&quot;')}">${g}</button>`).join(''); document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{activeGroup=b.dataset.g; render()})}
-function favs(){try{return JSON.parse(get('favs','[]'))}catch{return[]}} function setFavs(a){save('favs',JSON.stringify(a))}
-function render(){loadGroups(); const q=$('#search').value.toLowerCase().trim(); const kind=$('#kind').value; const fs=favs(); filtered=channels.filter(c=>{if(!$('#showAdult').checked && isAdult(c))return false; if(activeGroup==='Favoritos'&&!fs.includes(c.url))return false; if(activeGroup!=='Todos'&&activeGroup!=='Favoritos'&&groupLabel(c.group)!==activeGroup)return false; if(kind==='adult'&&!isAdult(c))return false; if(kind==='vod'&&!isVod(c))return false; if(kind==='live'&&(isVod(c)||isAdult(c)))return false; if(kind==='fav'&&!fs.includes(c.url))return false; return !q||(c.name+' '+c.group).toLowerCase().includes(q)}); $('#count').textContent=filtered.length+' / '+channels.length; $('#list').innerHTML=filtered.map((c,i)=>`<div class="item ${c.url===(channels[current]&&channels[current].url)?'active':''}" data-i="${i}"><img class="logo" src="${c.logo||''}" onerror="this.src=''"><div><div class="name">${esc(c.name)}</div><div class="group">${esc(c.group)}</div></div><button class="star ${fs.includes(c.url)?'on':''}" data-star="${i}">★</button></div>`).join('')||'<div class="sub">No hay canales.</div>'; document.querySelectorAll('.item').forEach(el=>el.onclick=e=>{if(e.target.dataset.star)return; play(filtered[+el.dataset.i])}); document.querySelectorAll('[data-star]').forEach(b=>b.onclick=e=>{e.stopPropagation(); const c=filtered[+b.dataset.star]; let f=favs(); f=f.includes(c.url)?f.filter(x=>x!==c.url):[...f,c.url]; setFavs(f); render()})}
-function esc(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-async function loadList(){const url=$('#m3uUrl').value.trim(); if(!url)return alert('Pega una URL M3U'); save('m3u',url); normalizeProxy(); $('#loadBtn').disabled=true; $('#loadBtn').textContent='Cargando...'; try{const r=await fetch(proxied(url),{cache:'no-store'}); if(!r.ok)throw new Error('HTTP '+r.status); const txt=await r.text(); channels=parseM3U(txt); if(!channels.length)throw new Error('No se detectan canales en la lista'); activeGroup='Todos'; save('channelsCache',JSON.stringify(channels)); render(); $('#status').textContent='Lista cargada correctamente.';}catch(e){alert('No se pudo cargar la lista: '+e.message)}finally{$('#loadBtn').disabled=false; $('#loadBtn').textContent='Cargar'}}
-function destroyPlayers(){try{if(hls){hls.destroy();hls=null}}catch{} try{if(mpeg){mpeg.destroy();mpeg=null}}catch{} const v=$('#video'); v.pause(); v.removeAttribute('src'); v.load();}
-function play(c){current=channels.findIndex(x=>x.url===c.url); save('last',c.url); render(); destroyPlayers(); const v=$('#video'); const u=proxied(c.url); $('#now').textContent='Reproduciendo: '+c.name; $('#status').textContent='Cargando stream...'; $('#engine').textContent=''; const low=c.url.toLowerCase(); try{ if(low.includes('.m3u8')||low.includes('m3u8')){ if(window.Hls && Hls.isSupported()){hls=new Hls({lowLatencyMode:true}); hls.loadSource(u); hls.attachMedia(v); hls.on(Hls.Events.MANIFEST_PARSED,()=>v.play().catch(()=>{})); hls.on(Hls.Events.ERROR,(ev,data)=>{$('#status').textContent='Error HLS: '+(data.details||data.type)}); $('#engine').textContent='HLS';} else {v.src=u; v.play().catch(()=>{}); $('#engine').textContent='HLS nativo';} } else { if(window.mpegts && mpegts.isSupported()){mpeg=mpegts.createPlayer({type:'mpegts',isLive:true,url:u},{enableWorker:true,liveBufferLatencyChasing:true}); mpeg.attachMediaElement(v); mpeg.load(); mpeg.play(); $('#engine').textContent='MPEGTS';} else {v.src=u; v.play().catch(()=>{}); $('#engine').textContent='Nativo';} } $('#status').textContent='Si se queda en negro, prueba otro canal o pulsa Reintentar.';}catch(e){$('#status').textContent='Error reproduciendo: '+e.message}}
-function move(n){if(!filtered.length)return; const cur=channels[current]; let i=filtered.findIndex(x=>cur&&x.url===cur.url); i=(i+n+filtered.length)%filtered.length; play(filtered[i])}
-$('#loadBtn').onclick=loadList; $('#saveProxy').onclick=()=>{normalizeProxy(); alert('Proxy guardado')}; $('#search').oninput=render; $('#kind').onchange=render; $('#showAdult').onchange=()=>{save('showAdult',$('#showAdult').checked?'1':'0'); render()}; $('#prevBtn').onclick=()=>move(-1); $('#nextBtn').onclick=()=>move(1); $('#reloadBtn').onclick=()=>{const c=channels[current]; if(c)play(c)}; $('#clearBtn').onclick=()=>{if(confirm('¿Borrar URL, proxy, favoritos y caché?')){Object.keys(localStorage).filter(k=>k.startsWith(LS)).forEach(k=>localStorage.removeItem(k)); location.reload()}}; $('#fsBtn').onclick=()=>{const v=$('#video'); (v.requestFullscreen||v.webkitRequestFullscreen||v.msRequestFullscreen).call(v)};
-(function init(){ $('#m3uUrl').value=get('m3u'); $('#proxyUrl').value=get('proxy'); $('#showAdult').checked=get('showAdult')==='1'; try{channels=JSON.parse(get('channelsCache','[]'))}catch{} render(); const last=get('last'); if(last){const c=channels.find(x=>x.url===last); if(c) $('#now').textContent='Último canal: '+c.name} if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{}); })();
-</script>
+
+    <main class="layout">
+      <aside class="sidebar card">
+        <div class="sidebar-head">
+          <h2>Canales</h2>
+          <span id="channelCount">0</span>
+        </div>
+        <input id="searchInput" class="search" type="search" placeholder="Buscar canal..." />
+        <div class="quick-tabs">
+          <button data-view="all" class="active">Todos</button>
+          <button data-view="favorites">Favoritos</button>
+          <button data-view="recent">Recientes</button>
+        </div>
+        <label class="adult-toggle"><input id="adultToggle" type="checkbox" /> Mostrar adultos</label>
+        <select id="groupSelect" class="group-select"><option value="__all__">Todas las categorías</option></select>
+        <div id="categoryChips" class="chips"></div>
+        <div id="channelList" class="channel-list"></div>
+      </aside>
+
+      <section class="player-area card">
+        <div class="player-frame">
+          <video id="video" controls playsinline preload="metadata"></video>
+          <div id="playerOverlay" class="player-overlay">
+            <div class="spinner"></div>
+            <p>Selecciona un canal</p>
+          </div>
+        </div>
+        <div class="now-playing">
+          <div class="np-left">
+            <img id="nowLogo" alt="" class="now-logo hidden" />
+            <div>
+              <h2 id="nowTitle">Sin canal seleccionado</h2>
+              <p id="nowGroup">Carga tu lista M3U para empezar.</p>
+            </div>
+          </div>
+          <div class="np-actions">
+            <button id="favBtn" class="ghost">☆ Favorito</button>
+            <button id="prevBtn" class="ghost">Anterior</button>
+            <button id="nextBtn" class="ghost">Siguiente</button>
+            <button id="fullscreenBtn" class="primary">Pantalla completa</button>
+          </div>
+        </div>
+        <div id="statusBox" class="status">Listo.</div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/m3u.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
