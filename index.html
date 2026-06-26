@@ -1,96 +1,21 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#07111f" />
-  <title>BioIPTV</title>
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.min.js"></script>
-</head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">TV</div>
-        <div>
-          <h1>BioIPTV</h1>
-          <p>Reproductor privado M3U · sin anuncios</p>
-        </div>
-      </div>
-      <button id="installBtn" class="ghost hidden">Instalar app</button>
-      <button id="settingsBtn" class="ghost">Ajustes</button>
-    </header>
-
-    <section id="setupPanel" class="setup card">
-      <div class="setup-grid">
-        <label>
-          <span>URL M3U</span>
-          <input id="m3uUrl" type="password" placeholder="Pega aquí tu URL M3U" autocomplete="off" />
-        </label>
-        <label>
-          <span>Proxy Cloudflare Worker</span>
-          <input id="proxyUrl" type="text" placeholder="https://tu-worker.workers.dev/" />
-        </label>
-        <div class="setup-actions">
-          <button id="loadBtn" class="primary">Cargar lista</button>
-          <button id="clearBtn" class="danger">Borrar datos</button>
-        </div>
-      </div>
-      <p class="hint">Solo se guardan la URL, favoritos y ajustes. La lista se descarga al abrir para evitar límites del navegador.</p>
-    </section>
-
-    <main class="layout">
-      <aside class="sidebar card">
-        <div class="sidebar-head">
-          <h2>Canales</h2>
-          <span id="channelCount">0</span>
-        </div>
-        <input id="searchInput" class="search" type="search" placeholder="Buscar canal..." />
-        <div class="quick-tabs">
-          <button data-view="all" class="active">Todos</button>
-          <button data-view="favorites">Favoritos</button>
-          <button data-view="recent">Recientes</button>
-        </div>
-        <label class="adult-toggle"><input id="adultToggle" type="checkbox" /> Mostrar adultos</label>
-        <select id="groupSelect" class="group-select"><option value="__all__">Todas las categorías</option></select>
-        <div id="categoryChips" class="chips"></div>
-        <div id="channelList" class="channel-list"></div>
-      </aside>
-
-      <section class="player-area card">
-        <div class="player-frame">
-          <video id="video" controls playsinline preload="metadata"></video>
-          <div id="playerOverlay" class="player-overlay">
-            <div class="spinner"></div>
-            <p>Selecciona un canal</p>
-          </div>
-        </div>
-        <div class="now-playing">
-          <div class="np-left">
-            <img id="nowLogo" alt="" class="now-logo hidden" />
-            <div>
-              <h2 id="nowTitle">Sin canal seleccionado</h2>
-              <p id="nowGroup">Carga tu lista M3U para empezar.</p>
-            </div>
-          </div>
-          <div class="np-actions">
-            <button id="favBtn" class="ghost">☆ Favorito</button>
-            <button id="prevBtn" class="ghost">Anterior</button>
-            <button id="nextBtn" class="ghost">Siguiente</button>
-            <button id="fullscreenBtn" class="primary">Pantalla completa</button>
-          </div>
-        </div>
-        <div id="statusBox" class="status">Listo.</div>
-      </section>
-    </main>
-  </div>
-
-  <script src="js/storage.js"></script>
-  <script src="js/m3u.js"></script>
-  <script src="js/player.js"></script>
-  <script src="js/app.js"></script>
-</body>
-</html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BioIPTV</title><link rel="manifest" href="manifest.webmanifest"><style>
+:root{--bg:#070b12;--panel:#101827;--panel2:#0d1422;--line:#24344d;--txt:#f3f7ff;--muted:#9bb2d0;--blue:#2f6df6;--blue2:#173f98;--red:#c43d4d;--green:#22c55e}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#13213a,#070b12 55%);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select{font:inherit}button{border:0;border-radius:14px;background:#17263d;color:#fff;font-weight:700;padding:12px 16px;cursor:pointer;border:1px solid #2a4163}button.primary{background:var(--blue);border-color:#4a83ff}button.danger{background:#b93145;border-color:#d95366}.wrap{max-width:1500px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:14px}.logo{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#2f6df6,#8b5cf6);display:grid;place-items:center;font-weight:900}.brand h1{margin:0;font-size:28px}.brand p{margin:3px 0 0;color:var(--muted)}.setup{background:rgba(16,24,39,.9);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:16px}.row{display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px}.field label{display:block;color:#bcd0eb;font-weight:800;margin:0 0 6px}.field input{width:100%;background:#060b14;border:1px solid #2a3e5d;border-radius:13px;color:#fff;padding:13px}.hint{color:var(--muted);font-size:13px;margin-top:7px}.main{display:grid;grid-template-columns:380px 1fr;gap:16px}.side,.playerbox{background:rgba(16,24,39,.92);border:1px solid var(--line);border-radius:22px;padding:16px;min-height:640px}.sideHead{display:flex;justify-content:space-between;align-items:center}.side h2{margin:0 0 12px}.search{width:100%;background:#060b14;color:#fff;border:1px solid #2a3e5d;border-radius:13px;padding:13px;margin-bottom:10px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chip{padding:9px 12px;border-radius:999px;border:1px solid #2a4163;background:#0b1423;color:#dceaff}.chip.active{background:#1d4ed8;color:#fff}.adult{display:flex;align-items:center;gap:8px;color:#c9d8ee;font-size:14px;margin:10px 0}.cat{width:100%;background:#060b14;color:#fff;border:1px solid #2a3e5d;border-radius:13px;padding:13px;margin-bottom:10px}.list{height:520px;overflow:auto;padding-right:6px}.chan{display:flex;gap:10px;align-items:center;background:#08111f;border:1px solid #1e3049;border-radius:14px;padding:10px;margin-bottom:8px;cursor:pointer}.chan.active{background:#173c8c;border-color:#4d83ff}.chan img{width:42px;height:42px;border-radius:8px;background:#05080e;object-fit:contain}.ct{min-width:0}.ct b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ct small{display:block;color:#9fb4d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.videoWrap{background:#111;border-radius:20px;overflow:hidden;aspect-ratio:16/9;display:grid;place-items:center;position:relative}video{width:100%;height:100%;background:#111}.empty{position:absolute;color:#dbeafe}.info{display:flex;gap:12px;align-items:center;margin-top:15px}.info img{width:54px;height:54px;border-radius:10px;background:#05080e;object-fit:contain}.info h2{margin:0;font-size:24px}.info p{margin:2px 0 0;color:var(--muted)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.status{margin-top:12px;border:1px solid #2a3e5d;background:#091120;border-radius:13px;padding:12px;color:#b8c9e4}.cats{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.catbtn{padding:8px 12px;border-radius:999px;background:#091424;border:1px solid #233a5b;color:#dbeafe;cursor:pointer}.catbtn.active{background:#1747a7}.hidden{display:none}@media(max-width:900px){.wrap{padding:12px}.row{grid-template-columns:1fr}.main{grid-template-columns:1fr}.side,.playerbox{min-height:0}.list{height:360px}.top{align-items:flex-start}.brand h1{font-size:24px}}
+</style></head><body><div class="wrap"><header class="top"><div class="brand"><div class="logo">TV</div><div><h1>BioIPTV</h1><p>Reproductor privado M3U · HLS/MPEGTS · sin anuncios</p></div></div><button id="installBtn" class="hidden">Instalar app</button></header><section class="setup" id="setup"><div class="row"><div class="field"><label>URL M3U</label><input id="m3uUrl" type="password" placeholder="http://.../get.php?...&type=m3u_plus&output=mpegts"></div><div class="field"><label>Proxy Worker</label><input id="proxyUrl" placeholder="https://...workers.dev/"></div><button class="primary" id="loadBtn">Cargar lista</button><button class="danger" id="clearBtn">Borrar</button></div><div class="hint">Consejo: si tu proveedor acepta HLS, esta versión cambia automáticamente <b>output=mpegts</b> por <b>output=m3u8</b> para que el navegador pueda reproducir mejor.</div></section><main class="main"><aside class="side"><div class="sideHead"><h2>Canales</h2><b id="count">0</b></div><input id="search" class="search" placeholder="Buscar canal..."><div class="chips"><button class="chip active" data-mode="all">Todos</button><button class="chip" data-mode="fav">Favoritos</button><button class="chip" data-mode="recent">Recientes</button></div><label class="adult"><input id="adultToggle" type="checkbox"> Mostrar adultos</label><select id="category" class="cat"><option value="">Todas las categorías</option></select><div class="cats" id="quickCats"></div><div class="list" id="list"></div></aside><section class="playerbox"><div class="videoWrap"><video id="video" controls playsinline autoplay></video><div id="empty" class="empty">Selecciona un canal</div></div><div class="info"><img id="logo" class="hidden"><div><h2 id="title">Sin canal seleccionado</h2><p id="group">Carga tu lista M3U para empezar.</p></div></div><div class="actions"><button id="favBtn">☆ Favorito</button><button id="prevBtn">Anterior</button><button id="nextBtn">Siguiente</button><button class="primary" id="fullBtn">Pantalla completa</button><button id="settingsBtn">Ajustes</button></div><div class="status" id="status">Listo.</div></section></main></div><script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script><script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest"></script><script>
+const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
+let channels=[],filtered=[],current=null,hls=null,flv=null,mode='all',deferredPrompt=null;
+const store={get(k,d){try{return JSON.parse(localStorage.getItem('bioiptv4_'+k))??d}catch{return d}},set(k,v){localStorage.setItem('bioiptv4_'+k,JSON.stringify(v))},del(k){localStorage.removeItem('bioiptv4_'+k)}};
+let favs=new Set(store.get('favs',[])),recents=store.get('recents',[]);
+$('#m3uUrl').value=store.get('m3u','');$('#proxyUrl').value=store.get('proxy','');
+function status(t){$('#status').textContent=t}function isAdult(c){return /adult|xxx|porn|porno|erotic|erótico|18\+|sex/i.test((c.group+' '+c.name))}
+function hlsify(u){try{let x=new URL(u);if(x.searchParams.get('output')==='mpegts'){x.searchParams.set('output','m3u8')}return x.toString()}catch{return u.replace('output=mpegts','output=m3u8')}}
+function prox(u){const p=$('#proxyUrl').value.trim();return p?p.replace(/\/$/,'')+'/?url='+encodeURIComponent(u):u}
+function parseM3U(txt){const lines=txt.split(/\r?\n/);const out=[];for(let i=0;i<lines.length;i++){let l=lines[i].trim();if(!l.startsWith('#EXTINF'))continue;let url='';for(let j=i+1;j<lines.length;j++){let n=lines[j].trim();if(n&&!n.startsWith('#')){url=n;i=j;break}}if(!url)continue;let name=(l.split(',').pop()||'Canal').trim();let attrs={};l.replace(/([\w-]+)="([^"]*)"/g,(_,k,v)=>{attrs[k]=v;return ''});out.push({id:String(out.length),name:attrs['tvg-name']||name,logo:attrs['tvg-logo']||'',group:attrs['group-title']||'Sin categoría',url});}return out}
+async function loadList(){let raw=$('#m3uUrl').value.trim();let proxy=$('#proxyUrl').value.trim();if(!raw)return alert('Pega la URL M3U');store.set('m3u',raw);store.set('proxy',proxy);status('Cargando lista...');$('#loadBtn').textContent='Cargando...';try{let listUrl=hlsify(raw);let res=await fetch(prox(listUrl));let txt=await res.text();if(!txt.includes('#EXTM3U')){res=await fetch(prox(raw));txt=await res.text()}channels=parseM3U(txt);fillCats();applyFilters();status('Lista cargada: '+channels.length+' canales.');alert('Lista cargada correctamente: '+channels.length+' canales');}catch(e){alert('No se pudo cargar la lista: '+e.message);status('Error cargando lista.')}finally{$('#loadBtn').textContent='Cargar lista'}}
+function fillCats(){const cats=[...new Set(channels.map(c=>c.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b));$('#category').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');const quick=['ES','DAZN','Deportes','Cine','VOD','Adultos','Movistar','Infantil','Documentales'];$('#quickCats').innerHTML=quick.map(c=>`<span class="catbtn" data-q="${esc(c)}">${esc(c)}</span>`).join('');$$('.catbtn').forEach(b=>b.onclick=()=>{$('#category').value='';$('#search').value=b.dataset.q;applyFilters()})}
+function applyFilters(){const q=$('#search').value.toLowerCase().trim(),cat=$('#category').value,showAdult=$('#adultToggle').checked;let arr=channels.filter(c=>showAdult||!isAdult(c));if(cat)arr=arr.filter(c=>c.group===cat);if(q)arr=arr.filter(c=>(c.name+' '+c.group).toLowerCase().includes(q));if(mode==='fav')arr=arr.filter(c=>favs.has(c.url));if(mode==='recent')arr=recents.map(u=>channels.find(c=>c.url===u)).filter(Boolean);filtered=arr;renderList()}
+function renderList(){const list=$('#list');$('#count').textContent=filtered.length+' / '+channels.length;list.innerHTML=filtered.slice(0,700).map(c=>`<div class="chan ${current&&current.url===c.url?'active':''}" data-url="${esc(c.url)}"><img src="${esc(c.logo)}" onerror="this.style.visibility='hidden'"><div class="ct"><b>${esc(c.name)}</b><small>${esc(c.group)}</small></div></div>`).join('')+(filtered.length>700?'<p style="color:#9bb2d0">Mostrando 700. Usa el buscador para afinar.</p>':'');$$('.chan').forEach(el=>el.onclick=()=>play(channels.find(c=>c.url===el.dataset.url)))}
+function destroyPlayer(){try{if(hls){hls.destroy();hls=null}}catch{}try{if(flv){flv.destroy();flv=null}}catch{}const v=$('#video');v.pause();v.removeAttribute('src');v.load()}
+async function play(c){if(!c)return;current=c;$('#empty').style.display='none';$('#title').textContent=c.name;$('#group').textContent=c.group;$('#logo').src=c.logo||'';$('#logo').classList.toggle('hidden',!c.logo);$('#favBtn').textContent=favs.has(c.url)?'★ Favorito':'☆ Favorito';recents=[c.url,...recents.filter(u=>u!==c.url)].slice(0,30);store.set('recents',recents);renderList();status('Abriendo: '+c.name);destroyPlayer();const v=$('#video');let u=hlsify(c.url);let src=prox(u);try{if(src.includes('.m3u8')||u.includes('output=m3u8')||Hls.isSupported()){if(Hls.isSupported()){hls=new Hls({lowLatencyMode:true,backBufferLength:30});hls.loadSource(src);hls.attachMedia(v);hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){status('Error HLS. Prueba otra calidad/canal o cambia output=mpegts por output=m3u8 en la URL original.')}})}else{v.src=src}}else if(window.mpegts&&mpegts.getFeatureList().mseLivePlayback){flv=mpegts.createPlayer({type:'mpegts',isLive:true,url:src});flv.attachMediaElement(v);flv.load()}else{v.src=src}await v.play().catch(()=>{});status('Reproduciendo: '+c.name)}catch(e){status('No se pudo reproducir: '+e.message)}}
+function esc(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+$('#loadBtn').onclick=loadList;$('#clearBtn').onclick=()=>{if(confirm('¿Borrar datos guardados?')){localStorage.clear();location.reload()}};$('#search').oninput=applyFilters;$('#category').onchange=applyFilters;$('#adultToggle').onchange=applyFilters;$$('.chip').forEach(b=>b.onclick=()=>{$$('.chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;applyFilters()});$('#favBtn').onclick=()=>{if(!current)return;if(favs.has(current.url))favs.delete(current.url);else favs.add(current.url);store.set('favs',[...favs]);applyFilters();$('#favBtn').textContent=favs.has(current.url)?'★ Favorito':'☆ Favorito'};$('#prevBtn').onclick=()=>{let i=filtered.findIndex(c=>current&&c.url===current.url);if(i>0)play(filtered[i-1])};$('#nextBtn').onclick=()=>{let i=filtered.findIndex(c=>current&&c.url===current.url);if(i>=0&&i<filtered.length-1)play(filtered[i+1])};$('#fullBtn').onclick=()=>$('#video').requestFullscreen?.();$('#settingsBtn').onclick=()=>$('#setup').classList.toggle('hidden');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('#installBtn').classList.remove('hidden')});$('#installBtn').onclick=()=>deferredPrompt?.prompt();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});if($('#m3uUrl').value&&$('#proxyUrl').value)setTimeout(loadList,400);
+</script></body></html>
