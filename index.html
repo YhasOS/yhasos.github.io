@@ -2,53 +2,87 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070c" />
   <title>BioIPTV</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    :root{--bg:#05070c;--card:#111722;--card2:#0b1018;--text:#eef3ff;--muted:#9aa8bd;--line:#202b3c;--accent:#2f6bff;--danger:#ff4d4d}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#09101b,#05070c);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    header{padding:18px 18px 10px;display:flex;gap:12px;align-items:center;justify-content:space-between}h1{margin:0;font-size:26px}.sub{color:var(--muted);font-size:13px;margin-top:3px}
+    main{max-width:1180px;margin:0 auto;padding:10px 14px 30px}.card{background:rgba(17,23,34,.92);border:1px solid var(--line);border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+    label{display:block;font-weight:700;color:var(--muted);font-size:13px;margin-bottom:7px}.row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}input,select{width:100%;border:1px solid #1c2636;border-radius:12px;padding:13px 14px;background:#060a12;color:var(--text);outline:none;font-size:15px}input:focus{border-color:var(--accent)}
+    button{border:0;border-radius:12px;padding:12px 15px;background:var(--accent);color:white;font-weight:800;cursor:pointer;white-space:nowrap}button.secondary{background:#1c2636}button.danger{background:#7b1e26}button:disabled{opacity:.55;cursor:not-allowed}
+    .help{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}.grid{display:grid;grid-template-columns:320px 1fr;gap:12px}.list{max-height:62vh;overflow:auto;padding-right:4px}.channel{width:100%;text-align:left;background:var(--card2);border:1px solid #182233;color:var(--text);padding:12px;border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}.channel.active{border-color:var(--accent);background:#12254d}.logo{width:36px;height:36px;border-radius:8px;object-fit:contain;background:#05070c}.name{font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.group{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    video{width:100%;aspect-ratio:16/9;background:#000;border-radius:16px;display:block}.status{color:var(--muted);font-size:13px;margin-top:10px}.topline{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}.count{color:var(--muted);font-size:13px}.warn{background:#3a2508;border:1px solid #735018;color:#ffd89b;padding:10px;border-radius:12px;margin-top:10px;font-size:13px;display:none}.hide{display:none!important}
+    @media(max-width:850px){.grid{grid-template-columns:1fr}.list{max-height:40vh}header{align-items:flex-start}.row{flex-direction:column}button{width:100%}}
+  </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>BioIPTV</h1>
-      <p>Reproductor M3U privado</p>
+<header>
+  <div><h1>BioIPTV</h1><div class="sub">Reproductor M3U privado · sin anuncios</div></div>
+  <button id="installBtn" class="secondary hide">Instalar</button>
+</header>
+<main>
+  <section class="card">
+    <label>URL M3U</label>
+    <div class="row">
+      <input id="m3uUrl" placeholder="Pega aquí tu URL M3U" autocomplete="off" />
+      <button id="loadBtn">Cargar</button>
     </div>
-    <button id="installBtn" hidden>Instalar</button>
-  </header>
+    <div class="help">La URL se guarda solo en este dispositivo. Si el proveedor bloquea el navegador, usa el proxy indicado abajo.</div>
+    <div class="warn" id="warnBox"></div>
+  </section>
 
-  <main>
-    <section class="card setup">
-      <label for="m3uUrl">URL M3U</label>
-      <div class="row">
-        <input id="m3uUrl" type="url" placeholder="https://.../lista.m3u" autocomplete="off" />
-        <button id="loadBtn">Cargar</button>
-      </div>
-      <small>La URL se guarda solo en este dispositivo.</small>
-    </section>
+  <section class="card">
+    <label>Proxy anti-bloqueo CORS / HTTP</label>
+    <div class="row">
+      <input id="proxyUrl" placeholder="Ejemplo: https://bioiptv-tuusuario.workers.dev" autocomplete="off" />
+      <button id="saveProxyBtn" class="secondary">Guardar proxy</button>
+    </div>
+    <div class="help">Para que funcione con listas HTTP o proveedores que bloquean CORS, crea el Worker incluido en el ZIP y pega aquí su dirección. Es una sola vez.</div>
+  </section>
 
-    <section class="player card">
+  <section class="grid">
+    <div class="card">
+      <div class="topline"><strong>Canales</strong><span class="count" id="count">0</span></div>
+      <input id="search" placeholder="Buscar canal..." />
+      <div style="height:10px"></div>
+      <div id="channels" class="list"><div class="status">No hay canales cargados.</div></div>
+    </div>
+    <div class="card">
       <video id="video" controls playsinline webkit-playsinline></video>
-      <div class="now">
-        <strong id="nowTitle">Sin canal seleccionado</strong>
-        <button id="fullscreenBtn">Pantalla completa</button>
+      <div class="topline" style="margin-top:12px;margin-bottom:0">
+        <div id="now" class="status">Sin canal seleccionado</div>
+        <button id="fullBtn" class="secondary">Pantalla completa</button>
       </div>
-    </section>
-
-    <section class="card tools">
-      <input id="search" type="search" placeholder="Buscar canal..." />
-      <span id="count">0 canales</span>
-    </section>
-
-    <section id="channels" class="channels"></section>
-  </main>
-
-  <footer>
-    BioIPTV · Sin anuncios · Uso privado
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+      <div class="row" style="margin-top:10px">
+        <button id="prevBtn" class="secondary">Anterior</button>
+        <button id="nextBtn" class="secondary">Siguiente</button>
+        <button id="clearBtn" class="danger">Borrar datos</button>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+const $=id=>document.getElementById(id);let channels=[], filtered=[], current=-1, hls=null, deferredPrompt=null;
+const store={get:k=>localStorage.getItem(k)||'', set:(k,v)=>localStorage.setItem(k,v), del:k=>localStorage.removeItem(k)};
+$('m3uUrl').value=store.get('m3uUrl'); $('proxyUrl').value=store.get('proxyUrl');
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBtn').classList.remove('hide')});
+$('installBtn').onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;$('installBtn').classList.add('hide')}};
+function proxied(url){const p=$('proxyUrl').value.trim().replace(/\/$/,''); if(!p) return url; return p+'/proxy?url='+encodeURIComponent(url)}
+function warn(msg){$('warnBox').textContent=msg;$('warnBox').style.display=msg?'block':'none'}
+function parseM3U(text){const lines=text.replace(/\r/g,'').split('\n'); const out=[]; let meta=null; for(const raw of lines){const line=raw.trim(); if(!line) continue; if(line.startsWith('#EXTINF')){meta=line; continue} if(!line.startsWith('#') && meta){out.push(channelFrom(meta,line)); meta=null}} return out}
+function attr(meta,key){const r=new RegExp(key+'="([^"]*)"').exec(meta); return r?r[1]:''}
+function channelFrom(meta,url){let name=(meta.split(',').pop()||'Canal').trim(); return {name, url, logo:attr(meta,'tvg-logo'), group:attr(meta,'group-title')}}
+async function loadList(){warn(''); const url=$('m3uUrl').value.trim(); if(!url){warn('Pega primero la URL M3U.');return} store.set('m3uUrl',url); store.set('proxyUrl',$('proxyUrl').value.trim()); $('loadBtn').disabled=true; $('loadBtn').textContent='Cargando...'; try{const res=await fetch(proxied(url),{cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status); const text=await res.text(); channels=parseM3U(text); filtered=channels; store.set('channelsCache',JSON.stringify(channels)); render(); if(channels.length){play(0)} else warn('La lista se ha descargado, pero no se han encontrado canales.')}catch(e){warn('No se pudo cargar la lista. Si tu URL empieza por http:// o ves error CORS, crea/usa el Worker proxy incluido en el ZIP. Detalle: '+e.message)} finally{$('loadBtn').disabled=false;$('loadBtn').textContent='Cargar'}}
+function render(){const q=$('search').value.trim().toLowerCase(); filtered=channels.filter(c=>(c.name+' '+c.group).toLowerCase().includes(q)); $('count').textContent=filtered.length+' canales'; const box=$('channels'); box.innerHTML=''; if(!filtered.length){box.innerHTML='<div class="status">No hay canales.</div>';return} filtered.forEach((c,i)=>{const b=document.createElement('button'); b.className='channel'+(channels.indexOf(c)===current?' active':''); b.onclick=()=>play(channels.indexOf(c)); b.innerHTML=(c.logo?`<img class="logo" src="${c.logo.replace(/"/g,'&quot;')}" onerror="this.style.display='none'">`:'<div class="logo"></div>')+`<div style="min-width:0"><div class="name">${esc(c.name)}</div><div class="group">${esc(c.group||'')}</div></div>`; box.appendChild(b)})}
+function esc(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function play(i){if(i<0||i>=channels.length)return; current=i; const c=channels[i]; store.set('lastChannel',String(i)); const video=$('video'); const src=proxied(c.url); if(hls){hls.destroy();hls=null} video.pause(); video.removeAttribute('src'); video.load(); if(c.url.includes('.m3u8') && window.Hls && Hls.isSupported()){hls=new Hls({enableWorker:true,lowLatencyMode:true}); hls.loadSource(src); hls.attachMedia(video); hls.on(Hls.Events.ERROR,(ev,data)=>{ if(data.fatal) warn('Error reproduciendo este canal. Prueba otro canal o revisa el proxy.')}); } else {video.src=src} video.play().catch(()=>{}); $('now').textContent='Reproduciendo: '+c.name; render()}
+$('loadBtn').onclick=loadList; $('saveProxyBtn').onclick=()=>{store.set('proxyUrl',$('proxyUrl').value.trim()); warn('Proxy guardado. Vuelve a pulsar Cargar.')} ; $('search').oninput=render;
+$('fullBtn').onclick=()=>{$('video').requestFullscreen?.()}; $('prevBtn').onclick=()=>play(Math.max(0,current-1)); $('nextBtn').onclick=()=>play(Math.min(channels.length-1,current+1)); $('clearBtn').onclick=()=>{localStorage.clear();location.reload()};
+try{channels=JSON.parse(store.get('channelsCache')||'[]'); filtered=channels; render(); const last=Number(store.get('lastChannel')); if(channels.length && Number.isFinite(last)) current=last;}catch{}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
