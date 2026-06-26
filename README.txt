@@ -1,16 +1,21 @@
-BioIPTV sencillo
+BioIPTV v2
 
-ARCHIVOS:
-- index.html, manifest.webmanifest, sw.js, icon.svg: subir a GitHub Pages.
-- worker.js: pegar en Cloudflare Worker gratuito para evitar CORS/HTTP.
+1) GitHub Pages:
+   - Sube index.html, manifest.webmanifest y sw.js al repositorio o carpeta /iptv/.
 
-PASOS MINIMOS:
-1) Sube index.html, manifest.webmanifest, sw.js e icon.svg a https://github.com/YhasOS/yhasos.github.io
-2) Crea un Worker gratuito en Cloudflare y pega el contenido de worker.js.
-3) Copia la URL del Worker, por ejemplo https://bioiptv.xxxxx.workers.dev
-4) Abre https://yhasos.github.io/
-5) Pega la URL del Worker en Proxy anti-bloqueo y pulsa Guardar proxy.
-6) Pega tu URL M3U y pulsa Cargar.
+2) Cloudflare Worker:
+   - Abre tu Worker.
+   - Sustituye todo el contenido por worker.js.
+   - Pulsa Deploy.
 
-NOTA:
-GitHub Pages no puede hacer de proxy. Por eso hace falta el Worker si el proveedor usa HTTP o bloquea CORS.
+3) En la app:
+   - Proxy: https://solitary-sky-5274.yhasos.workers.dev/
+   - URL M3U: tu URL privada.
+   - Pulsa Cargar.
+
+Mejoras incluidas:
+- Categorías por group-title de la lista M3U.
+- Filtro Todo / Canales / VOD / Adultos / Favoritos.
+- Oculta adultos por defecto.
+- Reproductor HLS y MPEGTS con hls.js y mpegts.js.
+- Favoritos, buscador, pantalla completa y reintento.
