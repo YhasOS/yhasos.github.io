@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi IPTV Player</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: var(--surface-color);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #2d2d2d;
+        }
+
+        .config-box {
+            padding: 15px;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .config-box input {
+            width: 100%;
+            padding: 8px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+
+        .config-box button {
+            width: 100%;
+            padding: 8px;
+            background: var(--primary-color);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .channel-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .channel-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #2d2d2d;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .channel-item:hover {
+            background-color: #2d2d2d;
+        }
+
+        .channel-item.active {
+            border-left: 4px solid var(--primary-color);
+            background-color: #251c33;
+        }
+
+        .player-area {
+            flex: 1;
+            display: flex;
+            background: #000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column-reverse; }
+            .sidebar { width: 100%; height: 40%; }
+            .player-area { height: 60%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="config-box">
+                <input type="text" id="m3u-url" placeholder="Pega aquí tu URL m3u (usa https://)">
+                <button onclick="cargarLista()">Cargar Canales</button>
+            </div>
+            <ul class="channel-list" id="playlist">
+                <li class="channel-item">Introduce tu URL arriba para empezar.</li>
+            </ul>
+        </div>
+
+        <div class="player-area">
+            <video id="video" controls autoplay></video>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const playlistUI = document.getElementById('playlist');
+        const urlInput = document.getElementById('m3u-url');
+        let hls = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('iptv_url');
+            if (savedUrl) {
+                urlInput.value = savedUrl;
+                procesarM3U(savedUrl);
+            }
+        });
+
+        async function cargarLista() {
+            let url = urlInput.value.trim();
+            if (!url) return alert('Por favor, introduce una URL.');
+            
+            // Forzar HTTPS para evitar bloqueo de contenido mixto
+            if(url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+                urlInput.value = url;
+            }
+            
+            localStorage.setItem('iptv_url', url);
+            procesarM3U(url);
+        }
+
+        async function procesarM3U(url) {
+            playlistUI.innerHTML = '<li class="channel-item">Cargando canales de tu lista...</li>';
+            try {
+                // Proxy gratuito para saltar restricciones CORS del proveedor
+                const proxy = "https://corsproxy.io/?"; 
+                const response = await fetch(proxy + encodeURIComponent(url));
+                if (!response.ok) throw new Error('No se pudo obtener la lista');
+                const text = await response.text();
+                
+                const canales = parseM3U(text);
+                renderCanales(canales);
+            } catch (error) {
+                playlistUI.innerHTML = `<li class="channel-item" style="color:#ff6b6b;">Error: No se pudo conectar con el servidor IPTV. Verifica que la URL no haya caducado o prueba en unos minutos.</li>`;
+                console.error(error);
+            }
+        }
+
+        function parseM3U(text) {
+            const lines = text.split('\n');
+            const channels = [];
+            let currentName = "";
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.startsWith('#EXTINF:')) {
+                    // Extraer el nombre del canal después de la última coma
+                    const parts = line.split(',');
+                    currentName = parts[parts.length - 1] || 'Canal sin nombre';
+                } else if (line.startsWith('http') && currentName) {
+                    // Forzar también las URLs de los canales a HTTPS si es necesario
+                    let channelUrl = line;
+                    if(channelUrl.startsWith('http://')) {
+                        channelUrl = channelUrl.replace('http://', 'https://');
+                    }
+                    channels.push({ name: currentName, url: channelUrl });
+                    currentName = "";
+                }
+            }
+            return channels;
+        }
+
+        function renderCanales(canales) {
+            playlistUI.innerHTML = '';
+            if (canales.length === 0) {
+                playlistUI.innerHTML = '<li class="channel-item">No se encontraron canales válidos.</li>';
+                return;
+            }
+
+            canales.forEach((canal) => {
+                const li = document.createElement('li');
+                li.className = 'channel-item';
+                li.innerText = canal.name;
+                li.onclick = () => reproducir(canal.url, li);
+                playlistUI.appendChild(li);
+            });
+        }
+
+        function reproducir(url, element) {
+            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            if (Hls.isSupported()) {
+                if (hls) hls.destroy();
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.addEventListener('loadedmetadata', () => video.play());
+            } else {
+                alert('Tu navegador o dispositivo no soporta este formato de streaming.');
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+        }
+    </script>
+</body>
+</html>
