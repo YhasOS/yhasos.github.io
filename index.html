@@ -1,74 +1,241 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BioIPTV</title><link rel="manifest" href="manifest.webmanifest"><style>
-:root{--bg:#07111f;--panel:#101c2f;--panel2:#0b1628;--line:#294264;--txt:#f4f7fb;--mut:#9bb7da;--blue:#2f6df6;--red:#c0324e;--chip:#102642}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#10213a,#050911 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial,sans-serif}.wrap{max-width:1500px;margin:auto;padding:20px}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:12px}.logo{width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#2187ff,#8b55ff);display:grid;place-items:center;font-weight:900}.brand h1{margin:0;font-size:30px}.brand p{margin:3px 0 0;color:#9fc2ee}.card{background:rgba(16,28,47,.96);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 15px 40px rgba(0,0,0,.18)}.cfg{display:grid;grid-template-columns:1.2fr 1fr auto auto;gap:10px;align-items:end;margin-bottom:18px}.field label{display:block;margin:0 0 7px;font-weight:800;color:#c9dcf5}.field input{width:100%;height:46px;background:#050c17;color:white;border:1px solid #315070;border-radius:12px;padding:0 14px;font-size:15px}.btn{border:1px solid #315070;border-radius:13px;background:#172844;color:white;font-weight:900;padding:13px 17px;cursor:pointer}.btn.primary{background:var(--blue);border-color:#5d8cff}.btn.red{background:var(--red);border-color:#d85a70}.main{display:grid;grid-template-columns:360px 1fr;gap:18px}.side{min-height:650px}.sidehead{display:flex;justify-content:space-between;align-items:center}.side h2{margin:0 0 12px}.search{width:100%;height:46px;background:#050c17;color:white;border:1px solid #315070;border-radius:12px;padding:0 14px;margin:8px 0 12px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chip{border:1px solid #315070;background:#0b1a2e;color:white;border-radius:999px;padding:9px 13px;cursor:pointer}.chip.on{background:#1d58d8}.select{width:100%;height:46px;background:#050c17;color:white;border:1px solid #315070;border-radius:12px;padding:0 12px;margin:8px 0}.list{height:470px;overflow:auto;padding-right:5px}.item{display:grid;grid-template-columns:46px 1fr;gap:10px;align-items:center;border:1px solid #1d3554;background:#071221;border-radius:13px;padding:9px;margin:8px 0;cursor:pointer}.item.active{background:#174599;border-color:#4a83ff}.thumb{width:42px;height:42px;border-radius:9px;background:#03070d;object-fit:contain}.name{font-weight:900}.group{color:#9fc2ee;font-size:12px;margin-top:3px}.playerbox{padding:14px}.videoWrap{position:relative;background:#333;border-radius:16px;overflow:hidden;aspect-ratio:16/9}video{width:100%;height:100%;background:#111;display:block}.msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:30px;font-weight:900;color:#e4eefc}.now{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-top:14px}.nowLeft{display:flex;gap:12px;align-items:center}.now h2{margin:0}.log{margin-top:12px;background:#071221;border:1px solid #1d3554;border-radius:12px;padding:12px;color:#b9d5f5;min-height:46px}.adult{display:flex;gap:8px;align-items:center;color:#c5d9f3}.small{font-size:13px;color:#9fc2ee;margin-top:8px}@media(max-width:900px){.cfg{grid-template-columns:1fr}.main{grid-template-columns:1fr}.list{height:350px}.top{align-items:flex-start}.brand h1{font-size:24px}.wrap{padding:12px}}
-</style></head><body><div class="wrap"><div class="top"><div class="brand"><div class="logo">TV</div><div><h1>BioIPTV</h1><p>Reproductor privado M3U / Xtream · Auto HLS/MPEGTS</p></div></div><button id="installBtn" class="btn" style="display:none">Instalar app</button></div>
-<div class="card cfg"><div class="field"><label>URL M3U / Xtream</label><input id="m3u" type="password" placeholder="http://servidor/get.php?username=...&password=...&type=m3u_plus&output=mpegts"></div><div class="field"><label>Proxy Worker</label><input id="proxy" placeholder="https://tu-worker.workers.dev/"></div><button id="load" class="btn primary">Cargar lista</button><button id="clear" class="btn red">Borrar</button><div class="small" style="grid-column:1/-1">Versión 7: prueba automáticamente HLS (.m3u8) y MPEGTS (.ts). Si un canal no abre, cambia al siguiente método y muestra diagnóstico.</div></div>
-<div class="main"><aside class="card side"><div class="sidehead"><h2>Canales</h2><strong id="count">0</strong></div><input id="search" class="search" placeholder="Buscar canal..."><div class="chips"><button class="chip on" data-mode="all">Todos</button><button class="chip" data-mode="fav">Favoritos</button><button class="chip" data-mode="recent">Recientes</button></div><label class="adult"><input id="adult" type="checkbox"> Mostrar adultos</label><select id="cat" class="select"><option value="">Todas las categorías</option></select><div id="quick" class="chips"></div><div id="list" class="list"></div></aside>
-<main class="card playerbox"><div class="videoWrap"><video id="video" controls playsinline></video><div id="msg" class="msg">Selecciona un canal</div></div><div class="now"><div class="nowLeft"><img id="nowLogo" class="thumb"><div><h2 id="nowName">Sin canal seleccionado</h2><div id="nowGroup" class="group">Carga tu lista para empezar.</div></div></div><div><button id="fav" class="btn">★ Favorito</button> <button id="prev" class="btn">Anterior</button> <button id="next" class="btn">Siguiente</button> <button id="full" class="btn primary">Pantalla completa</button></div></div><div id="log" class="log">Listo.</div></main></div></div>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script><script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest"></script><script>
-const $=id=>document.getElementById(id); let channels=[],filtered=[],current=-1,mode='all',hls=null,mt=null,deferredPrompt=null;
-const LS='bioiptv6_'; const adultWords=['adult','xxx','18+','porn','erotic','sexo','playboy']; const quickCats=['ES','DAZN','Deportes','Cine','VOD','Adultos','Movistar','Infantil','Documentales'];
-function save(k,v){localStorage.setItem(LS+k,JSON.stringify(v))} function load(k,d){try{return JSON.parse(localStorage.getItem(LS+k))??d}catch{return d}}
-let favs=load('favs',[]),recents=load('recents',[]);
-$('m3u').value=load('m3u',''); $('proxy').value=load('proxy','');
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBtn').style.display='inline-block'}); $('installBtn').onclick=()=>deferredPrompt?.prompt(); if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-function log(t){$('log').textContent=t} function cleanProxy(){let p=$('proxy').value.trim(); return p?p.replace(/\/?$/,'/'):''} function prox(u){let p=cleanProxy(); return p ? p+'?url='+encodeURIComponent(u) : u}
-function parseXtream(u){try{const x=new URL(u); const user=x.searchParams.get('username'), pass=x.searchParams.get('password'); if(!user||!pass)return null; return {base:x.origin, user, pass}}catch{return null}}
-async function loadList(){const u=$('m3u').value.trim(), p=$('proxy').value.trim(); if(!u)return alert('Pega la URL M3U'); save('m3u',u); save('proxy',p); $('load').disabled=true; $('load').textContent='Cargando...'; try{ const xt=parseXtream(u); if(xt){ await loadXtream(xt); } else { await loadM3U(u); } buildCats(); applyFilters(); alert('Lista cargada: '+channels.length+' canales'); }catch(e){console.error(e); alert('No se pudo cargar: '+e.message); log('Error: '+e.message)} finally{$('load').disabled=false;$('load').textContent='Cargar lista'}}
-async function fetchText(u){const r=await fetch(prox(u)); if(!r.ok)throw new Error('HTTP '+r.status); return await r.text()}
-async function fetchJson(u){const r=await fetch(prox(u)); if(!r.ok)throw new Error('HTTP '+r.status); return await r.json()}
-async function loadXtream(xt){log('Cargando categorías Xtream...'); const cats=await fetchJson(`${xt.base}/player_api.php?username=${encodeURIComponent(xt.user)}&password=${encodeURIComponent(xt.pass)}&action=get_live_categories`); const catMap={}; (cats||[]).forEach(c=>catMap[c.category_id]=c.category_name); log('Cargando canales Xtream...'); const streams=await fetchJson(`${xt.base}/player_api.php?username=${encodeURIComponent(xt.user)}&password=${encodeURIComponent(xt.pass)}&action=get_live_streams`); channels=(streams||[]).map(s=>({name:s.name||'Canal', group:catMap[s.category_id]||'Sin categoría', logo:s.stream_icon||'', url:`${xt.base}/live/${encodeURIComponent(xt.user)}/${encodeURIComponent(xt.pass)}/${s.stream_id}.ts`, hlsUrl:`${xt.base}/live/${encodeURIComponent(xt.user)}/${encodeURIComponent(xt.pass)}/${s.stream_id}.m3u8`, stream_id:s.stream_id, adult:isAdult((catMap[s.category_id]||'')+' '+(s.name||''))}));}
-async function loadM3U(u){let text=await fetchText(u); channels=parseM3U(text)}
-function attr(line,key){const m=line.match(new RegExp(key+'="([^"]*)"'));return m?m[1]:''}
-function parseM3U(t){const lines=t.split(/\r?\n/),out=[];let meta=null; for(const line of lines){if(line.startsWith('#EXTINF')){meta={name:(line.split(',').pop()||'Canal').trim(), group:attr(line,'group-title')||'Sin categoría', logo:attr(line,'tvg-logo')||''}} else if(meta && line.trim() && !line.startsWith('#')){meta.url=line.trim(); meta.adult=isAdult(meta.group+' '+meta.name); out.push(meta); meta=null}} return out}
-function isAdult(s){s=(s||'').toLowerCase();return adultWords.some(w=>s.includes(w))}
-function buildCats(){const sel=$('cat'); sel.innerHTML='<option value="">Todas las categorías</option>'; [...new Set(channels.map(c=>c.group).filter(Boolean))].sort().forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;sel.appendChild(o)}); $('quick').innerHTML=''; quickCats.forEach(q=>{const b=document.createElement('button');b.className='chip';b.textContent=q;b.onclick=()=>{if(q==='Adultos'){$('adult').checked=true;$('cat').value=''}; $('search').value=q==='Adultos'?'':q; applyFilters()}; $('quick').appendChild(b)})}
-function applyFilters(){const q=$('search').value.toLowerCase(), cat=$('cat').value, showAdult=$('adult').checked; let arr=channels.map((c,i)=>({...c,i})); if(!showAdult)arr=arr.filter(c=>!c.adult); if(cat)arr=arr.filter(c=>c.group===cat); if(q)arr=arr.filter(c=>(c.name+' '+c.group).toLowerCase().includes(q)); if(mode==='fav')arr=arr.filter(c=>favs.includes(c.url)); if(mode==='recent')arr=recents.map(u=>channels.find((c,i)=>c.url===u&&({...c,i}))).filter(Boolean); filtered=arr; renderList();}
-function renderList(){const list=$('list'); list.innerHTML=''; $('count').textContent=filtered.length+' / '+channels.length; filtered.slice(0,1200).forEach(c=>{const d=document.createElement('div');d.className='item'+(current===c.i?' active':'');d.onclick=()=>play(c.i); d.innerHTML=`<img class="thumb" src="${c.logo||''}" onerror="this.style.visibility='hidden'"><div><div class="name">${esc(c.name)}</div><div class="group">${esc(c.group)}</div></div>`; list.appendChild(d)})}
-function esc(s){return String(s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
-function destroy(){if(hls){hls.destroy();hls=null} if(mt){mt.destroy();mt=null} const v=$('video'); v.pause(); v.removeAttribute('src'); v.load()}
-async function play(i){
-current=i; const c=channels[i]; if(!c)return;
-$('nowName').textContent=c.name; $('nowGroup').textContent=c.group; $('nowLogo').src=c.logo||'';
-recents=[c.url,...recents.filter(x=>x!==c.url)].slice(0,30); save('recents',recents); renderList();
-let candidates=[];
-if(c.hlsUrl) candidates.push({kind:'hls', label:'HLS Xtream .m3u8', url:c.hlsUrl});
-if(c.url && (c.url.includes('.m3u8')||c.url.includes('m3u8'))) candidates.push({kind:'hls', label:'HLS lista', url:c.url});
-if(c.url) candidates.push({kind:'mpegts', label:'MPEGTS .ts', url:c.url});
-// Evita duplicados
-const seen=new Set(); candidates=candidates.filter(x=>{const k=x.kind+x.url;if(seen.has(k))return false;seen.add(k);return true});
-await tryCandidates(candidates, c.name);
-}
-function wait(ms){return new Promise(r=>setTimeout(r,ms))}
-async function tryCandidates(candidates, name){
-let last='';
-for(const cand of candidates){
-  destroy(); const v=$('video'); $('msg').style.display='grid'; $('msg').textContent='Probando '+cand.label+'...'; log('Probando '+cand.label+' · '+cand.url.replace(/password=[^&/]+/,'password=***').replace(/\/([^\/]+)\/([^\/]+)\/(\d+)\./,'/***/***/$3.'));
-  const ok = await startCandidate(cand);
-  if(ok){$('msg').style.display='none'; log('Reproduciendo con '+cand.label+': '+name); return;}
-  last = cand.label+' no arrancó';
-}
-$('msg').style.display='grid'; $('msg').textContent='No se pudo reproducir en navegador. Prueba otro canal o usa un proveedor/salida HLS.'; log('No reproduce. Último intento: '+last+' · Posible bloqueo 403/Cloudflare, salida MPEGTS no compatible o proveedor no permite proxy.');
-}
-async function startCandidate(cand){
-const v=$('video'); const url=prox(cand.url); let started=false;
-function mark(){ if(v.currentTime>0 || !v.paused || v.readyState>=3) started=true; }
-v.onplaying=mark; v.oncanplay=mark; v.onloadeddata=mark; v.onerror=()=>{log('Error video nativo: '+(v.error? v.error.code:''));};
-try{
-  if(cand.kind==='hls' && window.Hls && Hls.isSupported()){
-    hls=new Hls({lowLatencyMode:true, enableWorker:true, backBufferLength:30, manifestLoadingTimeOut:8000, fragLoadingTimeOut:10000});
-    hls.attachMedia(v); hls.loadSource(url);
-    hls.on(Hls.Events.ERROR,(e,d)=>{ if(d?.fatal){log('Error HLS: '+d.type+' / '+d.details+' / '+(d.response?.code||'')); }});
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>{v.play().catch(()=>{});});
-  } else if(cand.kind==='mpegts' && window.mpegts && mpegts.getFeatureList().mseLivePlayback){
-    mt=mpegts.createPlayer({type:'mpegts',isLive:true,url:url},{enableWorker:false,enableStashBuffer:false,autoCleanupSourceBuffer:true,liveBufferLatencyChasing:true});
-    mt.attachMediaElement(v); mt.load(); mt.play();
-    mt.on(mpegts.Events.ERROR,(type,detail,info)=>{log('Error MPEGTS: '+type+' / '+detail);});
-  } else {
-    v.src=url; v.load(); v.play().catch(()=>{});
-  }
-  for(let n=0;n<12;n++){ await wait(1000); mark(); if(started) return true; }
-}catch(e){ log('Error '+cand.label+': '+e.message); }
-return false;
-}
-$('load').onclick=loadList; $('clear').onclick=()=>{localStorage.clear();location.reload()}; $('search').oninput=applyFilters; $('cat').onchange=applyFilters; $('adult').onchange=applyFilters; document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.remove('on'));b.classList.add('on');applyFilters()}); $('fav').onclick=()=>{const c=channels[current]; if(!c)return; favs=favs.includes(c.url)?favs.filter(x=>x!==c.url):[...favs,c.url]; save('favs',favs); applyFilters()}; $('prev').onclick=()=>{const pos=filtered.findIndex(c=>c.i===current); if(pos>0)play(filtered[pos-1].i)}; $('next').onclick=()=>{const pos=filtered.findIndex(c=>c.i===current); if(pos<filtered.length-1)play(filtered[pos+1].i)}; $('full').onclick=()=>$('video').requestFullscreen?.();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi IPTV Player</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: var(--surface-color);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #2d2d2d;
+        }
+
+        .config-box {
+            padding: 15px;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .config-box input {
+            width: 100%;
+            padding: 8px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+
+        .config-box button {
+            width: 100%;
+            padding: 8px;
+            background: var(--primary-color);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .channel-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .channel-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #2d2d2d;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .channel-item:hover {
+            background-color: #2d2d2d;
+        }
+
+        .channel-item.active {
+            border-left: 4px solid var(--primary-color);
+            background-color: #251c33;
+        }
+
+        .player-area {
+            flex: 1;
+            display: flex;
+            background: #000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column-reverse; }
+            .sidebar { width: 100%; height: 40%; }
+            .player-area { height: 60%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="config-box">
+                <input type="text" id="m3u-url" placeholder="Pega aquí tu URL m3u (usa https://)">
+                <button onclick="cargarLista()">Cargar Canales</button>
+            </div>
+            <ul class="channel-list" id="playlist">
+                <li class="channel-item">Introduce tu URL arriba para empezar.</li>
+            </ul>
+        </div>
+
+        <div class="player-area">
+            <video id="video" controls autoplay></video>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const playlistUI = document.getElementById('playlist');
+        const urlInput = document.getElementById('m3u-url');
+        let hls = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('iptv_url');
+            if (savedUrl) {
+                urlInput.value = savedUrl;
+                procesarM3U(savedUrl);
+            }
+        });
+
+        async function cargarLista() {
+            let url = urlInput.value.trim();
+            if (!url) return alert('Por favor, introduce una URL.');
+            
+            // Forzar HTTPS para evitar bloqueo de contenido mixto
+            if(url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+                urlInput.value = url;
+            }
+            
+            localStorage.setItem('iptv_url', url);
+            procesarM3U(url);
+        }
+
+        async function procesarM3U(url) {
+            playlistUI.innerHTML = '<li class="channel-item">Cargando canales de tu lista...</li>';
+            try {
+                // Proxy gratuito para saltar restricciones CORS del proveedor
+                const proxy = "https://corsproxy.io/?"; 
+                const response = await fetch(proxy + encodeURIComponent(url));
+                if (!response.ok) throw new Error('No se pudo obtener la lista');
+                const text = await response.text();
+                
+                const canales = parseM3U(text);
+                renderCanales(canales);
+            } catch (error) {
+                playlistUI.innerHTML = `<li class="channel-item" style="color:#ff6b6b;">Error: No se pudo conectar con el servidor IPTV. Verifica que la URL no haya caducado o prueba en unos minutos.</li>`;
+                console.error(error);
+            }
+        }
+
+        function parseM3U(text) {
+            const lines = text.split('\n');
+            const channels = [];
+            let currentName = "";
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.startsWith('#EXTINF:')) {
+                    // Extraer el nombre del canal después de la última coma
+                    const parts = line.split(',');
+                    currentName = parts[parts.length - 1] || 'Canal sin nombre';
+                } else if (line.startsWith('http') && currentName) {
+                    // Forzar también las URLs de los canales a HTTPS si es necesario
+                    let channelUrl = line;
+                    if(channelUrl.startsWith('http://')) {
+                        channelUrl = channelUrl.replace('http://', 'https://');
+                    }
+                    channels.push({ name: currentName, url: channelUrl });
+                    currentName = "";
+                }
+            }
+            return channels;
+        }
+
+        function renderCanales(canales) {
+            playlistUI.innerHTML = '';
+            if (canales.length === 0) {
+                playlistUI.innerHTML = '<li class="channel-item">No se encontraron canales válidos.</li>';
+                return;
+            }
+
+            canales.forEach((canal) => {
+                const li = document.createElement('li');
+                li.className = 'channel-item';
+                li.innerText = canal.name;
+                li.onclick = () => reproducir(canal.url, li);
+                playlistUI.appendChild(li);
+            });
+        }
+
+        function reproducir(url, element) {
+            document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            if (Hls.isSupported()) {
+                if (hls) hls.destroy();
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.addEventListener('loadedmetadata', () => video.play());
+            } else {
+                alert('Tu navegador o dispositivo no soporta este formato de streaming.');
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+        }
+    </script>
+</body>
+</html>
