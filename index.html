@@ -121,11 +121,12 @@
         const statusText = document.getElementById('status');
         let hls = null;
 
-        // Tu URL de Cloudflare Workers integrada directamente
-        const MI_PROXY_WORKER = "https://solitary-sky-5274.yhasos.workers.dev/";
+        // URL base de tu Cloudflare Worker
+        const MI_PROXY_BASE = "https://solitary-sky-5274.yhasos.workers.dev/";
 
         window.addEventListener('DOMContentLoaded', () => {
-            procesarM3U(MI_PROXY_WORKER);
+            // Pedimos la lista pasándole un parámetro especial para indicar que queremos la lista M3U
+            procesarM3U(MI_PROXY_BASE + "?get=lista");
         });
 
         async function procesarM3U(url) {
@@ -138,7 +139,7 @@
                 statusText.innerText = `Canales cargados: ${canales.length}`;
                 statusText.style.color = "#bb86fc";
             } catch (error) {
-                playlistUI.innerHTML = `<li class="channel-item" style="color:#ff6b6b;">Error al conectar con tu Proxy de Cloudflare. Revisa que el código en tu Worker esté guardado y desplegado.</li>`;
+                playlistUI.innerHTML = `<li class="channel-item" style="color:#ff6b6b;">Error al conectar con tu Proxy de Cloudflare.</li>`;
                 statusText.innerText = "Error de conexión";
                 statusText.style.color = "#ff6b6b";
                 console.error(error);
@@ -174,9 +175,15 @@
                 const li = document.createElement('li');
                 li.className = 'channel-item';
                 li.innerText = canal.name;
-                li.onclick = () => reproducir(canal.url, li);
+                li.onclick = () => prepararReproduccion(canal.url, li);
                 playlistUI.appendChild(li);
             });
+        }
+
+        function prepararReproduccion(urlOriginal, element) {
+            // Pasamos la URL original del canal como parámetro a nuestro Worker para que actúe de puente seguro (HTTPS)
+            const urlConProxy = MI_PROXY_BASE + "?stream=" + encodeURIComponent(urlOriginal);
+            reproducir(urlConProxy, element);
         }
 
         function reproducir(url, element) {
@@ -199,7 +206,7 @@
                 video.src = url;
                 video.addEventListener('loadedmetadata', () => video.play());
             } else {
-                alert('Streaming no soportado en este dispositivo.');
+                alert('Streaming no soportado.');
             }
         }
 
