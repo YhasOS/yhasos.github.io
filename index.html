@@ -43,28 +43,13 @@
         .config-box {
             padding: 15px;
             border-bottom: 1px solid #2d2d2d;
+            text-align: center;
         }
 
-        .config-box input {
-            width: 100%;
-            padding: 8px;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-bottom: 8px;
-        }
-
-        .config-box button {
-            width: 100%;
-            padding: 8px;
-            background: var(--primary-color);
-            border: none;
-            color: #000;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
+        .config-box h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: var(--primary-color);
         }
 
         .channel-list {
@@ -117,11 +102,11 @@
     <div class="main-container">
         <div class="sidebar">
             <div class="config-box">
-                <input type="text" id="m3u-url" placeholder="Introduce tu URL m3u">
-                <button onclick="cargarLista()">Cargar Canales</button>
+                <h3>Mi Televisión Privada</h3>
+                <small id="status" style="color: #aaa;">Conectando al proxy...</small>
             </div>
             <ul class="channel-list" id="playlist">
-                <li class="channel-item">Cargando lista por defecto...</li>
+                <li class="channel-item">Cargando canales automáticamente...</li>
             </ul>
         </div>
 
@@ -133,38 +118,29 @@
     <script>
         const video = document.getElementById('video');
         const playlistUI = document.getElementById('playlist');
-        const urlInput = document.getElementById('m3u-url');
+        const statusText = document.getElementById('status');
         let hls = null;
 
-        // Tu URL original en HTTP configurada por defecto
-        const URL_POR_DEFECTO = "http://b9gxv8va.gts2fmr.xyz/get.php?username=2ff47255&password=k8sGbeQcNS@D&type=m3u_plus&output=mpegts";
+        // Tu URL de Cloudflare Workers integrada directamente
+        const MI_PROXY_WORKER = "https://solitary-sky-5274.yhasos.workers.dev/";
 
         window.addEventListener('DOMContentLoaded', () => {
-            const savedUrl = localStorage.getItem('iptv_url') || URL_POR_DEFECTO;
-            urlInput.value = savedUrl;
-            procesarM3U(savedUrl);
+            procesarM3U(MI_PROXY_WORKER);
         });
 
-        async function cargarLista() {
-            const url = urlInput.value.trim();
-            if (!url) return alert('Por favor, introduce una URL.');
-            localStorage.setItem('iptv_url', url);
-            procesarM3U(url);
-        }
-
         async function procesarM3U(url) {
-            playlistUI.innerHTML = '<li class="channel-item">Cargando canales de tu lista...</li>';
             try {
-                // Usamos un proxy que acepta HTTP de origen y nos devuelve HTTPS seguro para el navegador
-                const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`; 
-                const response = await fetch(proxy);
-                if (!response.ok) throw new Error('No se pudo obtener la lista');
-                const data = await response.json();
-                
-                const canales = parseM3U(data.contents);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Error al obtener los datos');
+                const text = await response.text();
+                const canales = parseM3U(text);
                 renderCanales(canales);
+                statusText.innerText = `Canales cargados: ${canales.length}`;
+                statusText.style.color = "#bb86fc";
             } catch (error) {
-                playlistUI.innerHTML = `<li class="channel-item" style="color:#ff6b6b;">Error: No se pudo conectar mediante el servidor puente.</li>`;
+                playlistUI.innerHTML = `<li class="channel-item" style="color:#ff6b6b;">Error al conectar con tu Proxy de Cloudflare. Revisa que el código en tu Worker esté guardado y desplegado.</li>`;
+                statusText.innerText = "Error de conexión";
+                statusText.style.color = "#ff6b6b";
                 console.error(error);
             }
         }
@@ -180,7 +156,6 @@
                     const parts = line.split(',');
                     currentName = parts[parts.length - 1] || 'Canal sin nombre';
                 } else if (line.startsWith('http') && currentName) {
-                    // Mantenemos la URL del canal tal cual (en http) ya que el reproductor de vídeo HLS maneja el contenido mixto de forma distinta según el navegador
                     channels.push({ name: currentName, url: line });
                     currentName = "";
                 }
@@ -191,7 +166,7 @@
         function renderCanales(canales) {
             playlistUI.innerHTML = '';
             if (canales.length === 0) {
-                playlistUI.innerHTML = '<li class="channel-item">No se encontraron canales.</li>';
+                playlistUI.innerHTML = '<li class="channel-item">No se encontraron canales válidos.</li>';
                 return;
             }
 
@@ -224,7 +199,7 @@
                 video.src = url;
                 video.addEventListener('loadedmetadata', () => video.play());
             } else {
-                alert('Tu dispositivo no soporta este formato de streaming.');
+                alert('Streaming no soportado en este dispositivo.');
             }
         }
 
